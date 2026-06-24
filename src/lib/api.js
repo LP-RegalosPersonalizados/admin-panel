@@ -2,6 +2,18 @@ const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://localhost:3001';
 
 function getToken() { return localStorage.getItem('token'); }
 
+const cache = { data: {}, time: {} };
+const TTL = 60 * 60 * 1000;
+
+function isCached(key) {
+  return cache.data[key] && cache.time[key] && Date.now() - cache.time[key] < TTL;
+}
+
+function invalidate(key) {
+  delete cache.data[key];
+  delete cache.time[key];
+}
+
 async function request(endpoint, options = {}) {
   const token = getToken();
   const headers = {
@@ -9,6 +21,14 @@ async function request(endpoint, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
+
+  const isRead = !options.method || options.method === 'GET';
+  const cacheKey = endpoint;
+
+  if (isRead && isCached(cacheKey)) {
+    return cache.data[cacheKey];
+  }
+
   const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
   if (!res.ok) {
     if (res.status === 401) {
@@ -18,7 +38,15 @@ async function request(endpoint, options = {}) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }
-  return res.json();
+
+  const data = await res.json();
+
+  if (isRead) {
+    cache.data[cacheKey] = data;
+    cache.time[cacheKey] = Date.now();
+  }
+
+  return data;
 }
 
 export const api = {
@@ -28,19 +56,37 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
   getProductos: () => request('/api/productos'),
-  getProducto: (id) => request(`/api/productos/${id}`),
-  createProducto: (data) =>
-    request('/api/productos', { method: 'POST', body: JSON.stringify(data) }),
-  updateProducto: (id, data) =>
-    request(`/api/productos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteProducto: (id) =>
-    request(`/api/productos/${id}`, { method: 'DELETE' }),
+  getProducto: (id) => {
+    invalidate('/api/productos');
+    return request(`/api/productos/${id}`);
+  },
+  createProducto: (data) => {
+    invalidate('/api/productos');
+    return request('/api/productos', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateProducto: (id, data) => {
+    invalidate('/api/productos');
+    return request(`/api/productos/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteProducto: (id) => {
+    invalidate('/api/productos');
+    return request(`/api/productos/${id}`, { method: 'DELETE' });
+  },
   getTrabajos: () => request('/api/trabajos'),
-  getTrabajo: (id) => request(`/api/trabajos/${id}`),
-  createTrabajo: (data) =>
-    request('/api/trabajos', { method: 'POST', body: JSON.stringify(data) }),
-  updateTrabajo: (id, data) =>
-    request(`/api/trabajos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteTrabajo: (id) =>
-    request(`/api/trabajos/${id}`, { method: 'DELETE' }),
+  getTrabajo: (id) => {
+    invalidate('/api/trabajos');
+    return request(`/api/trabajos/${id}`);
+  },
+  createTrabajo: (data) => {
+    invalidate('/api/trabajos');
+    return request('/api/trabajos', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateTrabajo: (id, data) => {
+    invalidate('/api/trabajos');
+    return request(`/api/trabajos/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteTrabajo: (id) => {
+    invalidate('/api/trabajos');
+    return request(`/api/trabajos/${id}`, { method: 'DELETE' });
+  },
 };
