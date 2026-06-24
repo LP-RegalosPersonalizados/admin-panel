@@ -16,9 +16,28 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.env.local
+.env.*.local
+
+# editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # macOS-specific files
 .DS_Store
 
-# jetbrains setting folder
-.idea/
+# TypeScript
+*.tsbuildinfo
+
+# AI agent files
+AGENTS.md
+CLAUDE.md
+
+# Vercel CLI cache
+.vercel/
+
+# Vite / bundle analysis
+stats.html
