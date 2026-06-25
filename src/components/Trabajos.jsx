@@ -4,6 +4,16 @@ import DataTable from './DataTable';
 import TrabajoForm from './TrabajoForm';
 import { api } from '../lib/api';
 
+const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/ALhaQ6ckGC';
+
+async function triggerVercelBuild() {
+  try {
+    await fetch(DEPLOY_HOOK, { method: 'POST' });
+  } catch (err) {
+    console.warn('Error triggering Vercel deploy:', err);
+  }
+}
+
 export default function Trabajos() {
   const [trabajos, setTrabajos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +40,7 @@ export default function Trabajos() {
       setShowForm(false);
       setEditing(null);
       load();
+      triggerVercelBuild();
     } catch (err) { alert(err.message); }
   };
 
@@ -38,6 +49,7 @@ export default function Trabajos() {
     try {
       await api.deleteTrabajo(id);
       load();
+      triggerVercelBuild();
     } catch (err) { alert(err.message); }
   };
 

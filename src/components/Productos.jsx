@@ -4,6 +4,16 @@ import DataTable from './DataTable';
 import ProductForm from './ProductForm';
 import { api } from '../lib/api';
 
+const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/ALhaQ6ckGC';
+
+async function triggerVercelBuild() {
+  try {
+    await fetch(DEPLOY_HOOK, { method: 'POST' });
+  } catch (err) {
+    console.warn('Error triggering Vercel deploy:', err);
+  }
+}
+
 export default function Productos() {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +40,7 @@ export default function Productos() {
       setShowForm(false);
       setEditing(null);
       load();
+      triggerVercelBuild();
     } catch (err) { alert(err.message); }
   };
 
@@ -38,6 +49,7 @@ export default function Productos() {
     try {
       await api.deleteProducto(id);
       load();
+      triggerVercelBuild();
     } catch (err) { alert(err.message); }
   };
 
