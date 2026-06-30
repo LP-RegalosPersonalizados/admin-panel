@@ -20,7 +20,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-slate-800 text-white px-4 py-3 flex items-center gap-3">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 text-white px-4 py-3 flex items-center gap-3">
         <button onClick={() => setMobileMenuOpen(true)} className="text-xl leading-none cursor-pointer">☰</button>
         <span className="font-semibold">Admin</span>
         <button
@@ -100,7 +100,7 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Main content */}
-      <main className="md:ml-60 pt-14 md:pt-0 p-4 md:p-8">
+      <main className="px-4 py-4 pt-14 md:ml-60 md:px-8 md:py-8 md:pt-0">
         {children}
       </main>
 
