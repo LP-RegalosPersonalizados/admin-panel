@@ -89,4 +89,28 @@ export const api = {
     invalidate('/api/trabajos');
     return request(`/api/trabajos/${id}`, { method: 'DELETE' });
   },
+
+  batchSaveProductos: (payload) =>
+    request('/api/productos/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  batchDeleteProductos: (payload) =>
+    request('/api/productos/batch/delete', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  batchSaveTrabajos: (payload) =>
+    request('/api/trabajos/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  batchDeleteTrabajos: (payload) =>
+    request('/api/trabajos/batch/delete', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };
