@@ -34,6 +34,7 @@ pnpm-debug.log*
 
 # AI agent files
 AGENTS.md
+.opencode
 CLAUDE.md
 
 # Vercel CLI cache
