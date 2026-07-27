@@ -31,10 +31,6 @@ async function request(endpoint, options = {}) {
 
   const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
   if (!res.ok) {
-    if (res.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/';
-    }
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }
@@ -90,27 +86,35 @@ export const api = {
     return request(`/api/trabajos/${id}`, { method: 'DELETE' });
   },
 
-  batchSaveProductos: (payload) =>
-    request('/api/productos/batch', {
+  batchSaveProductos: (payload) => {
+    invalidate('/api/productos');
+    return request('/api/productos/batch', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
+    });
+  },
 
-  batchDeleteProductos: (payload) =>
-    request('/api/productos/batch/delete', {
+  batchDeleteProductos: (payload) => {
+    invalidate('/api/productos');
+    return request('/api/productos/batch/delete', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
+    });
+  },
 
-  batchSaveTrabajos: (payload) =>
-    request('/api/trabajos/batch', {
+  batchSaveTrabajos: (payload) => {
+    invalidate('/api/trabajos');
+    return request('/api/trabajos/batch', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
+    });
+  },
 
-  batchDeleteTrabajos: (payload) =>
-    request('/api/trabajos/batch/delete', {
+  batchDeleteTrabajos: (payload) => {
+    invalidate('/api/trabajos');
+    return request('/api/trabajos/batch/delete', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
+    });
+  },
 };
