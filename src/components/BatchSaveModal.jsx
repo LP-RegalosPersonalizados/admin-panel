@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePendingChanges } from '../context/PendingChangesContext';
 import { api } from '../lib/api';
 
@@ -7,12 +8,13 @@ export default function BatchSaveModal({ isOpen, onClose }) {
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
   const confirmRef = useRef(null);
+  const navigate = useNavigate();
 
   const pCounts = getResourceCounts('productos');
   const tCounts = getResourceCounts('trabajos');
   const totalChanges = pCounts.total + tCounts.total;
-
-  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/ALhaQ6ckGC';
+// api de vercel para disparar el build de la app cuando se guardan cambios, rama actual : main 
+  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/mUuT2idSEA';
 
   useEffect(() => {
     if (isOpen && confirmRef.current) confirmRef.current.focus();
@@ -73,7 +75,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
         dispatch({ type: 'CLEAR_ALL' });
         triggerVercelBuild();
         setResult({ success: true });
-        setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
+        setTimeout(() => { navigate('/dashboard'); }, 1200);
       } else {
         setResult({ success: false, errors });
         setSaving(false);
