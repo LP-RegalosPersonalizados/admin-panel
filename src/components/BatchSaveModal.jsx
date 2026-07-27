@@ -13,8 +13,8 @@ export default function BatchSaveModal({ isOpen, onClose }) {
   const pCounts = getResourceCounts('productos');
   const tCounts = getResourceCounts('trabajos');
   const totalChanges = pCounts.total + tCounts.total;
-
-  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/ALhaQ6ckGC';
+// api de vercel para disparar el build de la app cuando se guardan cambios, rama actual : main 
+  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/mUuT2idSEA';
 
   useEffect(() => {
     if (isOpen && confirmRef.current) confirmRef.current.focus();
