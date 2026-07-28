@@ -1,22 +1,24 @@
 import { useState } from 'react';
-
-const categories = ['tazas', 'fotos', 'cuadros', 'festivos', 'alcancia', 'llaveros', 'otros'];
+import { stripMeta } from '../../utils/stripMeta';
+import { PRODUCT_CATEGORIES } from '../../utils/constants';
 
 export default function ProductForm({ initial, onSave, onCancel }) {
+  const cleaned = stripMeta(initial);
+
   const [form, setForm] = useState({
-    name: initial?.name || '',
-    slug: initial?.slug || '',
-    category: initial?.category || 'tazas',
-    price: initial?.price ?? '',
-    image: initial?.image || '',
-    gallery: initial?.gallery?.join('\n') || '',
-    description: initial?.description || '',
-    general_available: initial?.audience?.general?.available ?? true,
-    general_customizable: initial?.audience?.general?.customizable ?? true,
-    business_available: initial?.audience?.business?.available ?? false,
-    business_customizable: initial?.audience?.business?.customizable ?? false,
-    tags: initial?.tags?.join(', ') || '',
-    featured: initial?.featured ?? false,
+    name: cleaned?.name || '',
+    slug: cleaned?.slug || '',
+    category: cleaned?.category || 'tazas',
+    price: cleaned?.price ?? '',
+    image: cleaned?.image || '',
+    gallery: cleaned?.gallery?.join('\n') || '',
+    description: cleaned?.description || '',
+    general_available: cleaned?.audience?.general?.available ?? true,
+    general_customizable: cleaned?.audience?.general?.customizable ?? true,
+    business_available: cleaned?.audience?.business?.available ?? false,
+    business_customizable: cleaned?.audience?.business?.customizable ?? false,
+    tags: cleaned?.tags?.join(', ') || '',
+    featured: cleaned?.featured ?? false,
   });
 
   const handleChange = (e) => {
@@ -49,7 +51,7 @@ export default function ProductForm({ initial, onSave, onCancel }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-5">{initial ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+        <h2 className="text-xl font-bold mb-5">{cleaned ? 'Editar Producto' : 'Nuevo Producto'}</h2>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -63,7 +65,7 @@ export default function ProductForm({ initial, onSave, onCancel }) {
           <div>
             <label className={labelClass}>Categoría</label>
             <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
-              {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
+              {PRODUCT_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
           </div>
           <div>

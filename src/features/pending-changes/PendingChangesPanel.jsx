@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { usePendingChanges } from '../context/PendingChangesContext';
+import { usePendingChanges } from '../../context/PendingChangesContext';
 import BatchSaveModal from './BatchSaveModal';
+import PendingResourceSection from './PendingResourceSection';
 
 export default function PendingChangesPanel({ isOpen, onClose }) {
   const { state, dispatch, getResourceCounts } = usePendingChanges();
@@ -44,7 +45,6 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
             <p className="text-slate-400 text-sm text-center py-8">No hay cambios pendientes</p>
           ) : (
             <div className="space-y-6">
-              {/* Productos section */}
               {(state.productos.creates.length > 0 || Object.keys(state.productos.updates).length > 0 || state.pendingDeletes.productos.length > 0) && (
                 <PendingResourceSection
                   title="Productos"
@@ -57,7 +57,6 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
                 />
               )}
 
-              {/* Trabajos section */}
               {(state.trabajos.creates.length > 0 || Object.keys(state.trabajos.updates).length > 0 || state.pendingDeletes.trabajos.length > 0) && (
                 <PendingResourceSection
                   title="Trabajos"
@@ -94,66 +93,5 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
 
       <BatchSaveModal isOpen={showBatchModal} onClose={() => setShowBatchModal(false)} />
     </>
-  );
-}
-
-function PendingResourceSection({ title, creates, updates, deletes, resource, dispatch, getName }) {
-  const updatesList = Object.entries(updates);
-
-  return (
-    <div>
-      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{title}</h3>
-      <div className="space-y-1.5">
-        {creates.map((c) => (
-          <PendingItem
-            key={c.tempId}
-            icon="🆕"
-            label={getName(c.data)}
-            sublabel="Nuevo"
-            onDiscard={() => dispatch({ type: 'DISCARD_CREATE', resource, tempId: c.tempId })}
-          />
-        ))}
-        {updatesList.map(([id, u]) => (
-          <PendingItem
-            key={id}
-            icon="✏️"
-            label={getName(u.modified)}
-            sublabel="Modificado"
-            onDiscard={() => dispatch({ type: 'DISCARD_UPDATE', resource, id })}
-          />
-        ))}
-        {deletes.map((id) => (
-          <PendingItem
-            key={id}
-            icon="🗑️"
-            label={`ID: ${id}`}
-            sublabel="Eliminación"
-            sublabelClass="text-red-500"
-            onDiscard={() => dispatch({ type: 'UNMARK_DELETE', resource, id })}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PendingItem({ icon, label, sublabel, sublabelClass, onDiscard }) {
-  return (
-    <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-sm group">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="flex-shrink-0">{icon}</span>
-        <div className="truncate">
-          <p className="truncate text-slate-700">{label}</p>
-          <p className={`text-xs ${sublabelClass || 'text-slate-400'}`}>{sublabel}</p>
-        </div>
-      </div>
-      <button
-        onClick={onDiscard}
-        className="flex-shrink-0 ml-2 px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-        title="Descartar"
-      >
-        ✕
-      </button>
-    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { usePendingChanges } from '../context/PendingChangesContext';
-import { api } from '../lib/api';
+import { usePendingChanges } from '../../context/PendingChangesContext';
+import { batchSave as batchSaveProductos, batchDelete as batchDeleteProductos } from '../../lib/productos';
+import { batchSave as batchSaveTrabajos, batchDelete as batchDeleteTrabajos } from '../../lib/trabajos';
 
 export default function BatchSaveModal({ isOpen, onClose }) {
   const { state, getResourceCounts, dispatch } = usePendingChanges();
@@ -36,7 +37,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
 
     try {
       if (state.productos.creates.length > 0 || Object.keys(state.productos.updates).length > 0) {
-        const res = await api.batchSaveProductos({
+        const res = await batchSaveProductos({
           creates: state.productos.creates.map((c) => c.data),
           updates: Object.entries(state.productos.updates).map(([id, u]) => ({ id, ...u.modified })),
         });
@@ -46,7 +47,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       }
 
       if (state.trabajos.creates.length > 0 || Object.keys(state.trabajos.updates).length > 0) {
-        const res = await api.batchSaveTrabajos({
+        const res = await batchSaveTrabajos({
           creates: state.trabajos.creates.map((c) => c.data),
           updates: Object.entries(state.trabajos.updates).map(([id, u]) => ({ id, ...u.modified })),
         });
@@ -56,14 +57,14 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       }
 
       if (state.pendingDeletes.productos.length > 0) {
-        const res = await api.batchDeleteProductos({ ids: state.pendingDeletes.productos });
+        const res = await batchDeleteProductos({ ids: state.pendingDeletes.productos });
         if (res.failed && res.failed.length > 0) {
           errors.push({ resource: 'productos', type: 'delete', items: res.failed });
         }
       }
 
       if (state.pendingDeletes.trabajos.length > 0) {
-        const res = await api.batchDeleteTrabajos({ ids: state.pendingDeletes.trabajos });
+        const res = await batchDeleteTrabajos({ ids: state.pendingDeletes.trabajos });
         if (res.failed && res.failed.length > 0) {
           errors.push({ resource: 'trabajos', type: 'delete', items: res.failed });
         }
