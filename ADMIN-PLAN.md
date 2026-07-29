@@ -60,6 +60,9 @@ Container (lógica + estado + fetching)
 
 ### Flujo de escritura (Offline-first)
 
+**Aplica a:** productos, trabajos, categorías.
+**No aplica a:** pedidos (PII) — ver sección de Seguridad y Fase 5.
+
 ```
 Formulario → dispatch(ADD_CREATE | ADD_UPDATE) → localStorage
                                                      ↓
@@ -70,9 +73,55 @@ Panel Pendientes → BatchSaveModal → API (batch endpoints)
 
 ---
 
+## Seguridad — Clasificación de Datos
+
+### Clasificación por Sensibilidad
+
+| Tipo | Clasificación | Cache L2 (DataContext) | Cache L3 (cache.js) | Offline-first | localStorage |
+|---|---|---|---|---|---|
+| Productos | No sensible | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Pendientes |
+| Trabajos | No sensible | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Pendientes |
+| Categorías | No sensible | ✅ Sí | ✅ Sí (futuro) | ✅ Sí | ✅ Fallback |
+| Pedidos | **Sensible (PII)** | ✅ Solo sesión | ❌ No | ❌ No | ❌ Nunca |
+| Auth (token) | Sensible | N/A | N/A | N/A | ✅ Existente |
+
+### Políticas por Tipo de Dato
+
+#### Datos No Sensibles (Productos, Trabajos, Categorías)
+- Cache libre en memoria (DataContext L2)
+- Cache opcional en cache.js (L3, TTL 1 hora)
+- Offline-first con PendingChangesContext
+- Persistencia en localStorage aceptable para fallback o cambios pendientes
+
+#### Datos Sensibles con PII (Pedidos: nombre, teléfono, email)
+- **Sin cache en disco:** No se almacenan en cache.js (L3)
+- **Sin offline-first:** No pasan por PendingChangesContext
+- **Sin localStorage:** No se persisten localmente bajo ningún concepto
+- **Solo DataContext en memoria (L2):** Carga única desde API, solo durante la sesión del navegador
+- **Escritura directa a API:** POST/PUT/DELETE van directo al servidor, sin batch ni acumulación
+- **refreshAll()** tras cada escritura para mantener consistencia
+- **HTTPS obligatorio:** Asumido por el entorno de deploy
+
+#### Auth
+- Token JWT en localStorage (existente, no modificar)
+- Email en localStorage para UI (existente, no modificar)
+
+### Implicaciones de Arquitectura
+
+| Recurso | Carga en DataContext | Flujo de Escritura |
+|---|---|---|
+| Productos | `loadIfNeeded()` → L2 → si falta → L3 → si falta → API | Offline-first → PendingChanges → Batch → API |
+| Trabajos | `loadIfNeeded()` → L2 → si falta → L3 → si falta → API | Offline-first → PendingChanges → Batch → API |
+| Categorías | `loadIfNeeded()` → L2 → si falta → L3 → si falta → API | Offline-first → PendingChanges → Batch → API |
+| Pedidos | `loadIfNeeded()` → L2 → si falta → **API directa** (salta L3) | **Directo a API** → refreshAll() |
+
+---
+
 ## Estrategia de Datos — Capas de Cache
 
 Toda la arquitectura se basa en 4 capas de cache. **Ningún componente hace fetch directo a la API.** Siempre pasa por DataContext primero.
+
+> **Excepción:** Los pedidos (PII) saltan L3 (cache.js) y van directo L2 → API en escritura. Ver sección de Seguridad.
 
 ```
 ┌─ L1: CONSTANTES ───────────────────────────────────────────┐
@@ -1180,7 +1229,8 @@ export default function QuickActions({ onNewProducto, onNewTrabajo }) {
 
 ## Fase 4: Gestión de Categorías
 
-> **Datos manejados por DataContext.** `categorias[]` se añade al contexto compartido.
+> **Datos no sensibles.** Usan el mismo patrón offline-first que productos/trabajos.
+> `categorias[]` se añade al DataContext compartido. Sin API: fallback localStorage.
 
 ### 4.1 Extender DataContext para incluir categorías
 
@@ -1191,39 +1241,80 @@ const [categorias, setCategorias] = useState(null);
 // loadIfNeeded actualizado:
 const loadIfNeeded = useCallback(async () => {
   if (productos !== null && trabajos !== null && categorias !== null) return;
-  // fetch de categorias si es necesario
+  const [p, t, c] = await Promise.all([
+    productos !== null ? null : getProductos(),
+    trabajos !== null ? null : getTrabajos(),
+    categorias !== null ? null : getCategorias(),
+  ]);
+  if (p && productos === null) setProductos(p);
+  if (t && trabajos === null) setTrabajos(t);
+  if (c && categorias === null) setCategorias(c);
 }, [productos, trabajos, categorias]);
 ```
 
 ### 4.2 Reemplazar constants.js por datos dinámicos
 
-`PRODUCT_CATEGORIES` y `TRABAJO_CATEGORIES` se obtienen de la API, con fallback a constantes.
+`PRODUCT_CATEGORIES` y `TRABAJO_CATEGORIES` se obtienen de la API (`/api/categorias?type=producto` y `?type=trabajo`), con fallback a constantes hardcodeadas mientras no haya API.
 
 ### 4.3 Pantalla `/categorias`
 
 - CRUD completo con tabla + formulario
-- Dos secciones: Categorías de Productos y Categorías de Trabajos
+- Dos secciones: Categorías de Productos y Categorías de Trabajos (filtradas por `type`)
 - Formulario inline/modal con nombre + descripción opcional
+- Íconos en tabla: `Tags` para producto, `Briefcase` para trabajo
+- Badge de tipo: "Producto" (`bg-blue-100`) / "Trabajo" (`bg-amber-100`)
 
-### 4.4 API
+### 4.4 Contrato API
 
 ```js
-// src/lib/categorias.js
+// src/lib/categorias.js — mismo patrón que productos.js, con cache.js L3
+
 GET    /api/categorias
+  → 200 { data: Categoria[] }
+
+GET    /api/categorias/:id
+  → 200 Categoria
+  → 404 { error: 'Categoría no encontrada' }
+
 POST   /api/categorias
+  Body: { type: 'producto' | 'trabajo', name: string, description?: string }
+  → 201 Categoria
+  → 400 { error: string, fields?: Record<string, string> }
+
 PUT    /api/categorias/:id
+  Body: { name?: string, description?: string }
+  → 200 Categoria
+  → 404 { error: 'Categoría no encontrada' }
+
 DELETE /api/categorias/:id
+  → 200 { success: true }
+  → 409 { error: 'Categoría en uso — tiene productos o trabajos asociados' }
+  → 404 { error: 'Categoría no encontrada' }
+```
+
+Modelo:
+```json
+{
+  "id": "cat_001",
+  "type": "producto",
+  "name": "Tazas",
+  "description": "Tazas personalizadas",
+  "createdAt": "2026-07-29T10:00:00Z",
+  "updatedAt": "2026-07-29T10:00:00Z"
+}
 ```
 
 ### 4.5 Fallback localStorage
 
-Mientras no haya API, el estado se persiste en localStorage.
+Mientras no haya endpoint `/api/categorias`, el estado se persiste en localStorage (clave `categorias`). Al migrar a API real, los datos locales deben migrarse o convivir con los remotos.
 
 ---
 
 ## Fase 5: Gestión de Pedidos
 
-> **Datos manejados por DataContext.** `pedidos[]` se añade al contexto compartido.
+> **⚠️ Contiene PII (nombre, teléfono, email). NO usa offline-first.**
+> Los pedidos se guardan **directo a la API**. Sin cache L3, sin localStorage, sin PendingChangesContext.
+> Solo DataContext en memoria (L2) durante la sesión del navegador.
 
 ### 5.1 Modelo
 
@@ -1255,19 +1346,94 @@ Mientras no haya API, el estado se persiste en localStorage.
   - Entregado: `bg-slate-100 text-slate-700`
   - Cancelado: `bg-red-100 text-red-700`
 - Filtros por estado y fecha
+- Botón "Nuevo Pedido" abre modal con formulario
 
-### 5.3 API
+### 5.3 Estrategia de Cache
 
-```js
-// src/lib/pedidos.js
-GET    /api/pedidos
-POST   /api/pedidos/batch
-POST   /api/pedidos/batch/delete
+```
+PedidosContainer
+  ├── Lectura: DataContext.pedidos[] (L2, solo memoria)
+  │     └── loadIfNeeded() → GET /api/pedidos (NUNCA pasa por cache.js L3)
+  ├── Escritura: POST/PUT/DELETE directo a API
+  │     └── NO pasa por PendingChangesContext
+  └── refreshAll() tras cada escritura exitosa
+        └── GET /api/pedidos actualiza pedidos[] en memoria
+
+Controles de seguridad:
+  ✅ Solo memoria React — no cache.js (L3)
+  ✅ Sin localStorage para pedidos
+  ✅ Sin offline-first — escritura directa
+  ✅ refreshAll() mantiene consistencia tras cada operación
 ```
 
-### 5.4 Integración con PendingChangesContext
+### 5.4 Contrato API
 
-Sigue el mismo patrón offline-first que productos y trabajos.
+```js
+// src/lib/pedidos.js — SIN cache L3, llama a fetch() directamente
+
+GET    /api/pedidos?page=1&limit=50&status=pending&search=
+  → 200 { data: Pedido[], total: number, page: number, limit: number }
+
+GET    /api/pedidos/:id
+  → 200 Pedido
+  → 404 { error: 'Pedido no encontrado' }
+
+POST   /api/pedidos
+  Body: { customerName, customerPhone, customerEmail, productId, quantity, notes, status }
+  → 201 Pedido
+  → 400 { error: string, fields?: Record<string, string> }
+
+PUT    /api/pedidos/:id
+  Body: { customerName?, customerPhone?, customerEmail?, productId?, quantity?, notes?, status? }
+  → 200 Pedido
+  → 404 { error: 'Pedido no encontrado' }
+  → 400 { error: string, fields?: Record<string, string> }
+
+DELETE /api/pedidos/:id
+  → 200 { success: true }
+  → 404 { error: 'Pedido no encontrado' }
+
+PATCH  /api/pedidos/:id/status
+  Body: { status: 'pending' | 'in_progress' | 'completed' | 'delivered' | 'cancelled' }
+  → 200 Pedido
+  → 400 { error: 'Estado inválido' }
+  → 404 { error: 'Pedido no encontrado' }
+```
+
+### 5.5 DataContext — Integración
+
+En `DataContext.jsx` se añade:
+
+```jsx
+const [pedidos, setPedidos] = useState(null);
+
+// loadIfNeeded incluye pedidos (solo si es necesario)
+const loadIfNeeded = useCallback(async () => {
+  if (productos !== null && trabajos !== null && categorias !== null && pedidos !== null) return;
+  // fetch de pedidos si es necesario (NUNCA usa cache.js)
+}, [productos, trabajos, categorias, pedidos]);
+
+// savePedido() — función expuesta para escritura directa
+const savePedido = useCallback(async (pedidoData, id) => {
+  // POST o PUT directo a API
+  // refreshAll() tras éxito
+}, []);
+```
+
+### 5.6 Integración con PendingChangesContext
+
+**No hay integración.** Los pedidos no acumulan cambios pendientes. Cada operación (crear, editar, eliminar) ejecuta su llamada HTTP directa inmediatamente.
+
+### 5.7 Contraste con Categorías
+
+| Aspecto | Categorías (Fase 4) | Pedidos (Fase 5) |
+|---|---|---|
+| Clasificación | No sensible | **Sensible (PII)** |
+| Cache L3 (cache.js) | ✅ Sí | ❌ No |
+| Offline-first | ✅ Sí | ❌ No |
+| localStorage | ✅ Fallback datos | ❌ Nunca |
+| Escritura | Batch (offline-first) → API | Directa (inmediata) a API |
+| Refresco | refreshAll() tras batch | refreshAll() tras cada op |
 
 ---
 
@@ -1305,6 +1471,110 @@ Botón en pantallas de Productos y Trabajos.
 | `Ctrl+N` | Nuevo item |
 | `Ctrl+S` | Guardar formulario |
 | `Ctrl+Shift+D` | Toggle dark mode |
+
+---
+
+## Roadmap de Backend (api-recuerdos)
+
+> Endpoints necesarios para que el frontend funcione completamente.
+> El orden de implementación sigue las fases del frontend.
+
+### Estado Actual
+
+| Endpoint | Estado | Uso en Frontend |
+|---|---|---|
+| `POST /api/login` | ✅ Existente | Auth |
+| `GET /api/productos` | ✅ Existente | DataContext |
+| `POST /api/productos` | ✅ Existente | Offline batch |
+| `PUT /api/productos/:id` | ✅ Existente | Offline batch |
+| `DELETE /api/productos/:id` | ✅ Existente | Offline batch |
+| `GET /api/trabajos` | ✅ Existente | DataContext |
+| `POST /api/trabajos` | ✅ Existente | Offline batch |
+| `PUT /api/trabajos/:id` | ✅ Existente | Offline batch |
+| `DELETE /api/trabajos/:id` | ✅ Existente | Offline batch |
+| `GET /api/categorias` | ❌ No existe | Fase 4 |
+| `POST /api/categorias` | ❌ No existe | Fase 4 |
+| `PUT /api/categorias/:id` | ❌ No existe | Fase 4 |
+| `DELETE /api/categorias/:id` | ❌ No existe | Fase 4 |
+| `GET /api/pedidos` | ❌ No existe | Fase 5 |
+| `POST /api/pedidos` | ❌ No existe | Fase 5 |
+| `PUT /api/pedidos/:id` | ❌ No existe | Fase 5 |
+| `DELETE /api/pedidos/:id` | ❌ No existe | Fase 5 |
+| `PATCH /api/pedidos/:id/status` | ❌ No existe | Fase 5 |
+
+### APIs por Implementar
+
+#### `/api/categorias`
+
+```
+GET    /api/categorias          → { data: Categoria[] }
+GET    /api/categorias/:id       → Categoria
+POST   /api/categorias           → Crear categoría
+PUT    /api/categorias/:id       → Actualizar categoría
+DELETE /api/categorias/:id       → Eliminar (falla si tiene productos/trabajos asociados)
+```
+
+Modelo:
+```json
+{
+  "id": "cat_001",
+  "type": "producto",
+  "name": "Tazas",
+  "description": "Tazas personalizadas",
+  "createdAt": "2026-07-29T10:00:00Z",
+  "updatedAt": "2026-07-29T10:00:00Z"
+}
+```
+
+Consideraciones de negocio:
+- `type` separa categorías de productos (`"producto"`) vs trabajos (`"trabajo"`)
+- `DELETE` debe validar que ningún producto/trabajo use esa categoría (responder `409`)
+- GET público necesario para el frontend público de recuerdoscompartidos.com
+- Endpoints protegidos con autenticación para escritura
+
+#### `/api/pedidos`
+
+```
+GET    /api/pedidos?page=1&limit=50&status=pending&search=
+  → { data: Pedido[], total, page, limit }
+
+GET    /api/pedidos/:id           → Pedido
+POST   /api/pedidos               → Crear pedido
+PUT    /api/pedidos/:id           → Actualizar pedido
+DELETE /api/pedidos/:id           → Eliminar pedido
+PATCH  /api/pedidos/:id/status    → Cambiar estado
+```
+
+Modelo:
+```json
+{
+  "id": "ped_001",
+  "customerName": "Juan Pérez",
+  "customerPhone": "0412-1234567",
+  "customerEmail": "juan@email.com",
+  "productId": "prod_001",
+  "productName": "Taza personalizada",
+  "quantity": 3,
+  "notes": "Logo corporativo en azul",
+  "status": "pending",
+  "total": 450,
+  "createdAt": "2026-07-29T10:00:00Z",
+  "updatedAt": "2026-07-29T10:00:00Z"
+}
+```
+
+Consideraciones de seguridad:
+- Todos los endpoints protegidos con autenticación
+- Datos PII manejados con cuidado: no loguear campos sensibles, cifrado en tránsito
+- GET público NO debe exponer pedidos
+- `total` se computa en backend (quantity × product.price), el frontend solo envía quantity
+
+### Prioridad de Implementación
+
+| Orden | API | Frontend Fase | Impacto |
+|---|---|---|---|
+| 1 | `/api/categorias` | 4 | Sin esto, Fase 4 usa fallback localStorage (funcional pero sin persistencia real) |
+| 2 | `/api/pedidos` | 5 | Sin esto, Fase 5 está **bloqueada** (no se puede guardar PII en mock/localStorage) |
 
 ---
 
@@ -1366,13 +1636,13 @@ Botón en pantallas de Productos y Trabajos.
 - [ ] Fallback localStorage
 
 ### Fase 5 — Pedidos
-- [ ] Crear `src/lib/pedidos.js`
+- [ ] Crear `src/lib/pedidos.js` (SIN cache.js)
 - [ ] Crear `PedidosContainer.jsx`
 - [ ] Crear `PedidosView.jsx`
 - [ ] Crear `PedidoForm.jsx`
 - [ ] Ruta `/pedidos` en `AppRouter`
-- [ ] Extender `DataContext` con `pedidos[]`
-- [ ] Integrar PendingChangesContext
+- [ ] Extender `DataContext` con `pedidos[]` (solo L2, sin L3)
+- [ ] Implementar escritura directa a API (sin PendingChangesContext)
 
 ### Fase 6 — Utilidades
 - [ ] Crear `src/utils/exportCSV.js`
@@ -1392,7 +1662,7 @@ Botón en pantallas de Productos y Trabajos.
 |---|---|---|
 | DataContext (Fase 1) | Ninguna | Datos desde `lib/productos.js` y `lib/trabajos.js` (ya existen) |
 | Categorías (Fase 4) | API `/api/categorias` | Sin API: localStorage fallback |
-| Pedidos (Fase 5) | API `/api/pedidos` | Sin API: frontend con mock/localStorage |
+| Pedidos (Fase 5) | API `/api/pedidos` | Sin API: **bloqueado** (no usar mock con PII) |
 | Dashboard (Fase 3) | Ninguna | Datos vía DataContext |
 | Buscador (Fase 2) | Ninguna | Datos vía DataContext |
 | Exportar (Fase 6) | Ninguna | Puramente client-side |
