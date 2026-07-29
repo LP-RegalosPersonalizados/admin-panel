@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
-import { usePendingChanges } from '../context/PendingChangesContext';
-import PendingChangesPanel from './PendingChangesPanel';
+import { usePendingChanges } from '../../context/PendingChangesContext';
+import PendingChangesPanel from '../../features/pending-changes/PendingChangesPanel';
 
 export default function Layout({ children }) {
   const { email, logout } = useAuth();

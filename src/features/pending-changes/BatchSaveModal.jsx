@@ -1,20 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePendingChanges } from '../context/PendingChangesContext';
-import { api } from '../lib/api';
+import { usePendingChanges } from '../../context/PendingChangesContext';
+import { batchSave as batchSaveProductos, batchDelete as batchDeleteProductos } from '../../lib/productos';
+import { batchSave as batchSaveTrabajos, batchDelete as batchDeleteTrabajos } from '../../lib/trabajos';
 
 export default function BatchSaveModal({ isOpen, onClose }) {
   const { state, getResourceCounts, dispatch } = usePendingChanges();
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+  const navigate = useNavigate();
   const confirmRef = useRef(null);
   const navigate = useNavigate();
 
   const pCounts = getResourceCounts('productos');
   const tCounts = getResourceCounts('trabajos');
   const totalChanges = pCounts.total + tCounts.total;
-// api de vercel para disparar el build de la app cuando se guardan cambios, rama actual : main 
-  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/mUuT2idSEA';
+
+  const DEPLOY_HOOK = import.meta.env.PUBLIC_VERCEL_DEPLOY_HOOK || '';
 
   useEffect(() => {
     if (isOpen && confirmRef.current) confirmRef.current.focus();
@@ -38,7 +40,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
 
     try {
       if (state.productos.creates.length > 0 || Object.keys(state.productos.updates).length > 0) {
-        const res = await api.batchSaveProductos({
+        const res = await batchSaveProductos({
           creates: state.productos.creates.map((c) => c.data),
           updates: Object.entries(state.productos.updates).map(([id, u]) => ({ id, ...u.modified })),
         });
@@ -48,7 +50,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       }
 
       if (state.trabajos.creates.length > 0 || Object.keys(state.trabajos.updates).length > 0) {
-        const res = await api.batchSaveTrabajos({
+        const res = await batchSaveTrabajos({
           creates: state.trabajos.creates.map((c) => c.data),
           updates: Object.entries(state.trabajos.updates).map(([id, u]) => ({ id, ...u.modified })),
         });
@@ -58,14 +60,14 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       }
 
       if (state.pendingDeletes.productos.length > 0) {
-        const res = await api.batchDeleteProductos({ ids: state.pendingDeletes.productos });
+        const res = await batchDeleteProductos({ ids: state.pendingDeletes.productos });
         if (res.failed && res.failed.length > 0) {
           errors.push({ resource: 'productos', type: 'delete', items: res.failed });
         }
       }
 
       if (state.pendingDeletes.trabajos.length > 0) {
-        const res = await api.batchDeleteTrabajos({ ids: state.pendingDeletes.trabajos });
+        const res = await batchDeleteTrabajos({ ids: state.pendingDeletes.trabajos });
         if (res.failed && res.failed.length > 0) {
           errors.push({ resource: 'trabajos', type: 'delete', items: res.failed });
         }
@@ -73,9 +75,9 @@ export default function BatchSaveModal({ isOpen, onClose }) {
 
       if (errors.length === 0) {
         dispatch({ type: 'CLEAR_ALL' });
-        triggerVercelBuild();
+        if (DEPLOY_HOOK) triggerVercelBuild();
         setResult({ success: true });
-        setTimeout(() => { navigate('/dashboard'); }, 1200);
+        setTimeout(() => { navigate('/dashboard', { replace: true }); }, 1200);
       } else {
         setResult({ success: false, errors });
         setSaving(false);

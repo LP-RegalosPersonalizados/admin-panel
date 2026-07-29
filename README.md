@@ -133,33 +133,59 @@ El panel **nunca se comunica directamente** con SheetDB ni con Google Sheets. To
 ```
 admin-recuerdos/
 ├── public/
-│   ├── icons/
-│   ├── favicon.ico
-│   └── favicon.svg
 ├── src/
 │   ├── components/
-│   │   ├── App.jsx                    # Providers + Router principal
-│   │   ├── Layout.jsx                 # Sidebar, topbar mobile, main content wrapper
-│   │   ├── Login.jsx                  # Formulario de inicio de sesión
-│   │   ├── Dashboard.jsx              # Vista de resumen con estadísticas
-│   │   ├── Productos.jsx              # CRUD completo de productos
-│   │   ├── Trabajos.jsx               # CRUD completo de trabajos
-│   │   ├── ProductForm.jsx            # Modal de creación/edición de productos
-│   │   ├── TrabajoForm.jsx            # Modal de creación/edición de trabajos
-│   │   ├── DataTable.jsx              # Tabla genérica reutilizable
-│   │   ├── ConfirmDialog.jsx          # Diálogo de confirmación (responsive)
-│   │   ├── PendingChangesPanel.jsx    # Panel lateral de cambios pendientes
-│   │   ├── BatchSaveModal.jsx         # Modal de guardado masivo
-│   │   └── ProtectedRoute.jsx         # Guardia de autenticación
+│   │   ├── layout/
+│   │   │   └── Layout.jsx             # Sidebar, topbar mobile, main content wrapper
+│   │   └── ui/
+│   │       ├── DataTable.jsx          # Tabla genérica reutilizable
+│   │       └── ConfirmDialog.jsx      # Diálogo de confirmación responsive
 │   ├── context/
 │   │   ├── AuthContext.jsx            # Estado de autenticación (token, email, login, logout)
 │   │   └── PendingChangesContext.jsx   # Estado de cambios pendientes (reducer + localStorage)
+│   ├── features/
+│   │   ├── auth/
+│   │   │   ├── AuthContainer.jsx      # Lógica de login
+│   │   │   ├── AuthView.jsx           # UI del formulario de login
+│   │   │   ├── ProtectedRoute.jsx     # Guardia de autenticación
+│   │   │   └── index.js
+│   │   ├── dashboard/
+│   │   │   ├── DashboardContainer.jsx # Lógica: fetch + cómputo de stats
+│   │   │   ├── DashboardView.jsx      # UI: grid de tarjetas
+│   │   │   ├── StatCard.jsx           # Tarjeta individual de métrica
+│   │   │   └── index.js
+│   │   ├── productos/
+│   │   │   ├── ProductosContainer.jsx # Lógica CRUD de productos
+│   │   │   ├── ProductosView.jsx      # UI: tabla + formulario + modales
+│   │   │   ├── ProductForm.jsx        # Modal de formulario de producto
+│   │   │   └── index.js
+│   │   ├── trabajos/
+│   │   │   ├── TrabajosContainer.jsx  # Lógica CRUD de trabajos
+│   │   │   ├── TrabajosView.jsx       # UI: tabla + formulario + modales
+│   │   │   ├── TrabajoForm.jsx        # Modal de formulario de trabajo
+│   │   │   └── index.js
+│   │   └── pending-changes/
+│   │       ├── PendingChangesPanel.jsx  # Panel lateral de cambios pendientes
+│   │       ├── BatchSaveModal.jsx       # Modal de guardado masivo
+│   │       ├── PendingResourceSection.jsx  # Sección de recurso en el panel
+│   │       ├── PendingItem.jsx           # Item individual descartable
+│   │       └── index.js
+│   ├── hooks/                          # (reservado para hooks compartidos)
 │   ├── lib/
-│   │   └── api.js                     # Cliente HTTP con caché en memoria
+│   │   ├── client.js                  # Cliente HTTP base (fetch + token + caché)
+│   │   ├── cache.js                   # Lógica de caché en memoria (TTL 1 hora)
+│   │   ├── auth.js                    # Endpoints de autenticación
+│   │   ├── productos.js               # Endpoints de productos
+│   │   └── trabajos.js                # Endpoints de trabajos
+│   ├── middleware/
+│   │   └── AppRouter.jsx              # Providers globales + definición de rutas
 │   ├── pages/
-│   │   └── index.astro                # Entry point: HTML shell + componente React
-│   └── styles/                        # (reservado para estilos globales)
+│   │   └── index.astro                # Entry point: HTML shell + AppRouter
+│   └── utils/
+│       ├── stripMeta.js               # Limpieza de metadatos de pending changes
+│       └── constants.js               # Categorías de productos y trabajos
 ├── .env                               # Variables de entorno
+├── .env.example                       # Template de variables documentadas
 ├── astro.config.mjs                   # Configuración de Astro
 ├── tsconfig.json                      # Configuración de TypeScript
 ├── vercel.json                        # Configuración de despliegue Vercel
@@ -171,19 +197,26 @@ admin-recuerdos/
 
 | Componente | Archivo | Rol |
 |---|---|---|
-| `App` | `components/App.jsx` | Punto de entrada: monta `BrowserRouter`, `AuthProvider`, `PendingChangesProvider` y define las rutas |
-| `Layout` | `components/Layout.jsx` | Estructura layout con sidebar, topbar mobile, botón de cambios pendientes y slot para contenido |
-| `Login` | `components/Login.jsx` | Formulario de login con manejo de errores y estado de carga |
-| `Dashboard` | `components/Dashboard.jsx` | Vista principal: cards con totales, pendientes y categorías |
-| `Productos` | `components/Productos.jsx` | Vista CRUD de productos: tabla, formulario, modo eliminar batch |
-| `Trabajos` | `components/Trabajos.jsx` | Vista CRUD de trabajos: tabla, formulario, modo eliminar batch |
-| `ProductForm` | `components/ProductForm.jsx` | Modal con formulario completo de producto (13 campos) |
-| `TrabajoForm` | `components/TrabajoForm.jsx` | Modal con formulario de trabajo (5 campos) |
-| `DataTable` | `components/DataTable.jsx` | Tabla genérica con selección, render custom y badges de estado |
-| `ConfirmDialog` | `components/ConfirmDialog.jsx` | Diálogo modal de confirmación con soporte para variante danger |
-| `PendingChangesPanel` | `components/PendingChangesPanel.jsx` | Panel lateral que lista cambios pendientes con opción de descartar |
-| `BatchSaveModal` | `components/BatchSaveModal.jsx` | Modal que envía cambios batch a la API y dispara deploy hook |
-| `ProtectedRoute` | `components/ProtectedRoute.jsx` | Guardia que redirige al login si no hay sesión activa |
+| `AppRouter` | `middleware/AppRouter.jsx` | Providers globales (`AuthProvider`, `PendingChangesProvider`) + definición de rutas |
+| `Layout` | `components/layout/Layout.jsx` | Sidebar, topbar mobile, botón de cambios pendientes y slot para contenido |
+| `AuthContainer` | `features/auth/AuthContainer.jsx` | Lógica de login: estado del form, validación, llamada API |
+| `AuthView` | `features/auth/AuthView.jsx` | UI del formulario de inicio de sesión |
+| `ProtectedRoute` | `features/auth/ProtectedRoute.jsx` | Guardia que redirige al login si no hay sesión activa |
+| `DashboardContainer` | `features/dashboard/DashboardContainer.jsx` | Fetch de datos + cómputo de totales y pendientes |
+| `DashboardView` | `features/dashboard/DashboardView.jsx` | Grid de tarjetas con estadísticas |
+| `StatCard` | `features/dashboard/StatCard.jsx` | Tarjeta individual de métrica con badge de pendientes |
+| `ProductosContainer` | `features/productos/ProductosContainer.jsx` | Lógica CRUD de productos: fetch, estado local, dispatch a contexto |
+| `ProductosView` | `features/productos/ProductosView.jsx` | UI: tabla de productos, modo eliminar, formularios y modales |
+| `ProductForm` | `features/productos/ProductForm.jsx` | Modal con formulario completo de producto (13 campos) |
+| `TrabajosContainer` | `features/trabajos/TrabajosContainer.jsx` | Lógica CRUD de trabajos: fetch, estado local, dispatch a contexto |
+| `TrabajosView` | `features/trabajos/TrabajosView.jsx` | UI: tabla de trabajos, modo eliminar, formularios y modales |
+| `TrabajoForm` | `features/trabajos/TrabajoForm.jsx` | Modal con formulario de trabajo (5 campos) |
+| `DataTable` | `components/ui/DataTable.jsx` | Tabla genérica con selección, render custom y badges de estado |
+| `ConfirmDialog` | `components/ui/ConfirmDialog.jsx` | Diálogo modal de confirmación con soporte para variante danger |
+| `PendingChangesPanel` | `features/pending-changes/PendingChangesPanel.jsx` | Panel lateral que lista cambios pendientes con opción de descartar |
+| `PendingResourceSection` | `features/pending-changes/PendingResourceSection.jsx` | Sección por recurso (productos/trabajos) dentro del panel |
+| `PendingItem` | `features/pending-changes/PendingItem.jsx` | Item individual descartable con icono y etiqueta |
+| `BatchSaveModal` | `features/pending-changes/BatchSaveModal.jsx` | Modal que envía cambios batch a la API y dispara deploy hook |
 
 ### Contextos
 
@@ -212,20 +245,24 @@ admin-recuerdos/
 | `getEffectiveList(resource, apiData)` | Combina datos de API con cambios locales y pending deletes para renderizar la tabla |
 | `getResourceCounts(resource)` | Retorna conteo de creates, updates, deletes y total |
 
-### Cliente API (`src/lib/api.js`)
+### Cliente API (`src/lib/`)
 
-Módulo que envuelve `fetch` con:
+El cliente HTTP está dividido en módulos independientes por recurso:
 
-- **Base URL** desde `PUBLIC_API_URL` (entorno)
-- **Inyección automática** de token JWT del localStorage en header `Authorization`
+| Módulo | Archivo | Contenido |
+|---|---|---|
+| **Cliente base** | `lib/client.js` | `request()` — fetch con base URL, inyección de token JWT, manejo de 401, caché automática en GET |
+| **Caché** | `lib/cache.js` | Estado de caché en memoria con TTL de 1 hora para lecturas (GET) |
+| **Auth** | `lib/auth.js` | `login(email, password)` |
+| **Productos** | `lib/productos.js` | `getProductos`, `getProducto`, `createProducto`, `updateProducto`, `deleteProducto`, `batchSave`, `batchDelete` |
+| **Trabajos** | `lib/trabajos.js` | `getTrabajos`, `getTrabajo`, `createTrabajo`, `updateTrabajo`, `deleteTrabajo`, `batchSave`, `batchDelete` |
+
+Todas las funciones comparten el mismo cliente base que proporciona:
+
+- **Base URL** desde `PUBLIC_API_URL` (variable de entorno)
+- **Inyección automática** de token JWT del `localStorage` en header `Authorization`
 - **Caché en memoria** de 1 hora para lecturas (GET), invalidada automáticamente en escrituras
 - **Manejo de 401**: limpia token y redirige al login
-- Endpoints expuestos:
-  - `login(email, password)`
-  - `getProductos()`, `getProducto(id)`, `createProducto(data)`, `updateProducto(id, data)`, `deleteProducto(id)`
-  - `getTrabajos()`, `getTrabajo(id)`, `createTrabajo(data)`, `updateTrabajo(id, data)`, `deleteTrabajo(id)`
-  - `batchSaveProductos(payload)`, `batchDeleteProductos(payload)`
-  - `batchSaveTrabajos(payload)`, `batchDeleteTrabajos(payload)`
 
 ---
 
@@ -253,8 +290,11 @@ npm run dev
 | Variable | Descripción | Obligatorio | Ejemplo |
 |---|---|---|---|
 | `PUBLIC_API_URL` | URL base de la API REST | Sí | `http://localhost:3001` |
+| `PUBLIC_VERCEL_DEPLOY_HOOK` | URL del Deploy Hook de Vercel para rebuild automático tras guardar cambios | No (solo producción) | `https://api.vercel.com/v1/integrations/deploy/...` |
 
-La variable debe estar definida en un archivo `.env` en la raíz del proyecto. Astro expone automáticamente las variables con prefijo `PUBLIC_` al cliente.
+Las variables deben estar definidas en un archivo `.env` en la raíz del proyecto. Astro expone automáticamente las variables con prefijo `PUBLIC_` al cliente.
+
+> ⚠️ `PUBLIC_VERCEL_DEPLOY_HOOK` debe dejarse **vacío en local** y configurarse únicamente en el Dashboard de Vercel para el entorno de producción. Así se evitan deploys innecesarios durante el desarrollo.
 
 ---
 
@@ -318,7 +358,13 @@ El proyecto está configurado para desplegarse en **Vercel** como una SPA estát
 
 ### Deploy Hook Automático
 
-El `BatchSaveModal` incluye un deploy hook de Vercel que se dispara automáticamente al guardar cambios batch. Esto asegura que el sitio público (que consume la misma API) se reconstruya con los datos actualizados.
+El `BatchSaveModal` incluye un deploy hook de Vercel que se dispara automáticamente al guardar cambios batch exitosamente. Esto asegura que el sitio público (que consume la misma API) se reconstruya con los datos actualizados.
+
+> **Comportamiento condicional:** El hook se controla mediante la variable de entorno `PUBLIC_VERCEL_DEPLOY_HOOK`.
+> - En **local** la variable está vacía → **no se dispara** el deploy.
+> - En **producción** debe configurarse en el Dashboard de Vercel → se dispara solo al guardar desde el panel en vivo.
+>
+> Esto evita deploys innecesarios durante el desarrollo y pruebas con datos de prueba.
 
 ---
 
@@ -364,7 +410,7 @@ El panel consume los siguientes endpoints de `api-recuerdos`. Todos los endpoint
 ### Lectura
 
 ```
-Usuario → Componente → api.js (fetch) → API REST → SheetDB → Google Sheets
+Usuario → View → Container → lib/client.js (fetch) → API REST → SheetDB → Google Sheets
                                                     ↓
                                               Caché en memoria (1 hora)
                                                     ↓
@@ -383,7 +429,7 @@ Usuario → Formulario → PendingChangesContext → localStorage
                                                     ↓
                                           (usuario acumula cambios)
                                                     ↓
-                              BatchSaveModal → api.js (batch) → API REST
+                               BatchSaveModal → lib/client.js (batch) → API REST
                                                     ↓
                                           SheetDB (Google Sheets)
                                                     ↓

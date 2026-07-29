@@ -1,14 +1,16 @@
 import { useState } from 'react';
-
-const categories = ['Corporativo', 'Educativo', 'Decoración', 'Particular'];
+import { stripMeta } from '../../utils/stripMeta';
+import { TRABAJO_CATEGORIES } from '../../utils/constants';
 
 export default function TrabajoForm({ initial, onSave, onCancel }) {
+  const cleaned = stripMeta(initial);
+
   const [form, setForm] = useState({
-    title: initial?.title || '',
-    description: initial?.description || '',
-    image: initial?.image || '',
-    category: initial?.category || 'Particular',
-    quantity: initial?.quantity || '',
+    title: cleaned?.title || '',
+    description: cleaned?.description || '',
+    image: cleaned?.image || '',
+    category: cleaned?.category || 'Particular',
+    quantity: cleaned?.quantity || '',
   });
 
   const handleChange = (e) => {
@@ -27,7 +29,7 @@ export default function TrabajoForm({ initial, onSave, onCancel }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 w-full max-w-lg">
-        <h2 className="text-xl font-bold mb-5">{initial ? 'Editar Trabajo' : 'Nuevo Trabajo'}</h2>
+        <h2 className="text-xl font-bold mb-5">{cleaned ? 'Editar Trabajo' : 'Nuevo Trabajo'}</h2>
 
         <div className="mb-4">
           <label className={labelClass}>Título *</label>
@@ -48,7 +50,7 @@ export default function TrabajoForm({ initial, onSave, onCancel }) {
           <div>
             <label className={labelClass}>Categoría</label>
             <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
-              {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
+              {TRABAJO_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
           </div>
           <div>
