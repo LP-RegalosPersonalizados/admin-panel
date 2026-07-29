@@ -13,7 +13,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
   const tCounts = getResourceCounts('trabajos');
   const totalChanges = pCounts.total + tCounts.total;
 
-  const DEPLOY_HOOK = 'https://api.vercel.com/v1/integrations/deploy/prj_uc9Q2uvKMpqH2FjJpQytlKg67hPt/ALhaQ6ckGC';
+  const DEPLOY_HOOK = import.meta.env.PUBLIC_VERCEL_DEPLOY_HOOK || '';
 
   useEffect(() => {
     if (isOpen && confirmRef.current) confirmRef.current.focus();
@@ -72,7 +72,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
 
       if (errors.length === 0) {
         dispatch({ type: 'CLEAR_ALL' });
-        triggerVercelBuild();
+        if (DEPLOY_HOOK) triggerVercelBuild();
         setResult({ success: true });
         setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
       } else {
