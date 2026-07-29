@@ -25,6 +25,7 @@ export function deleteTrabajo(id) {
 }
 
 export function batchSave(payload) {
+  invalidate('/api/trabajos');
   return request('/api/trabajos/batch', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -32,6 +33,7 @@ export function batchSave(payload) {
 }
 
 export function batchDelete(payload) {
+  invalidate('/api/trabajos');
   return request('/api/trabajos/batch/delete', {
     method: 'POST',
     body: JSON.stringify(payload),

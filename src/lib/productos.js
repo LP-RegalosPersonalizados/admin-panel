@@ -25,6 +25,7 @@ export function deleteProducto(id) {
 }
 
 export function batchSave(payload) {
+  invalidate('/api/productos');
   return request('/api/productos/batch', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -32,6 +33,7 @@ export function batchSave(payload) {
 }
 
 export function batchDelete(payload) {
+  invalidate('/api/productos');
   return request('/api/productos/batch/delete', {
     method: 'POST',
     body: JSON.stringify(payload),
