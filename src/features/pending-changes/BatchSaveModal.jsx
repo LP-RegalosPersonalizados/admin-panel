@@ -10,6 +10,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
   const [result, setResult] = useState(null);
   const navigate = useNavigate();
   const confirmRef = useRef(null);
+  const navigate = useNavigate();
 
   const pCounts = getResourceCounts('productos');
   const tCounts = getResourceCounts('trabajos');
