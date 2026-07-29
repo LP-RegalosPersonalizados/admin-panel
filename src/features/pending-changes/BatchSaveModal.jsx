@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import { batchSave as batchSaveProductos, batchDelete as batchDeleteProductos } from '../../lib/productos';
 import { batchSave as batchSaveTrabajos, batchDelete as batchDeleteTrabajos } from '../../lib/trabajos';
@@ -7,6 +8,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
   const { state, getResourceCounts, dispatch } = usePendingChanges();
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+  const navigate = useNavigate();
   const confirmRef = useRef(null);
 
   const pCounts = getResourceCounts('productos');
@@ -74,7 +76,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
         dispatch({ type: 'CLEAR_ALL' });
         if (DEPLOY_HOOK) triggerVercelBuild();
         setResult({ success: true });
-        setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
+        setTimeout(() => { navigate('/dashboard', { replace: true }); }, 1200);
       } else {
         setResult({ success: false, errors });
         setSaving(false);
