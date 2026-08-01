@@ -20,7 +20,12 @@ export default function Modal({ isOpen, onClose, title, size = 'md', children, f
     };
     document.addEventListener('keydown', handleEscape);
     document.body.style.overflow = 'hidden';
-    contentRef.current?.focus();
+    const el = contentRef.current;
+    if (el) {
+      const firstField = el.querySelector('input, textarea, select');
+      if (firstField) firstField.focus();
+      else el.focus();
+    }
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';

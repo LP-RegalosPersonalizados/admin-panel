@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Upload, Trash2, Inbox } from 'lucide-react';
 import { usePendingChanges } from '../../context/PendingChangesContext';
+import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import BatchSaveModal from './BatchSaveModal';
 import PendingResourceSection from './PendingResourceSection';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function PendingChangesPanel({ isOpen, onClose }) {
   const { state, dispatch, getResourceCounts } = usePendingChanges();
+  const { toast } = useToast();
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const panelRef = useRef(null);
 
   const pCounts = getResourceCounts('productos');
@@ -92,9 +96,7 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
               variant="outline"
               icon={Trash2}
               className="w-full"
-              onClick={() => {
-                if (confirm('¿Descartar todos los cambios pendientes?')) dispatch({ type: 'DISCARD_ALL' });
-              }}
+              onClick={() => setShowDiscardConfirm(true)}
             >
               Descartar todo
             </Button>
@@ -103,6 +105,20 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
       </div>
 
       <BatchSaveModal isOpen={showBatchModal} onClose={() => setShowBatchModal(false)} />
+
+      <ConfirmDialog
+        isOpen={showDiscardConfirm}
+        title="Descartar cambios"
+        message="¿Descartar todos los cambios pendientes? Esta acción no se puede deshacer."
+        confirmLabel="Descartar todo"
+        variant="danger"
+        onConfirm={() => {
+          dispatch({ type: 'DISCARD_ALL' });
+          toast({ type: 'info', title: 'Cambios descartados', message: 'Se eliminaron todos los cambios pendientes.' });
+          setShowDiscardConfirm(false);
+        }}
+        onCancel={() => setShowDiscardConfirm(false)}
+      />
     </>
   );
 }

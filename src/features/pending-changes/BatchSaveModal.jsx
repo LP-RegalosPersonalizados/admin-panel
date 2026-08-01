@@ -6,9 +6,11 @@ import { batchSave as batchSaveProductos, batchDelete as batchDeleteProductos } 
 import { batchSave as batchSaveTrabajos, batchDelete as batchDeleteTrabajos } from '../../lib/trabajos';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
 
 export default function BatchSaveModal({ isOpen, onClose }) {
   const { state, getResourceCounts, dispatch } = usePendingChanges();
+  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
   const navigate = useNavigate();
@@ -73,13 +75,16 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       if (errors.length === 0) {
         dispatch({ type: 'CLEAR_ALL' });
         if (DEPLOY_HOOK) triggerVercelBuild();
+        toast({ type: 'success', title: 'Cambios guardados', message: 'Todo se sincronizó correctamente.' });
         setResult({ success: true });
         setTimeout(() => { navigate('/dashboard', { replace: true }); }, 1200);
       } else {
+        toast({ type: 'error', title: 'Error al guardar', message: 'Algunos cambios no se pudieron guardar.' });
         setResult({ success: false, errors });
         setSaving(false);
       }
     } catch (err) {
+      toast({ type: 'error', title: 'Error inesperado', message: err.message });
       setResult({ success: false, errors: [{ message: err.message }] });
       setSaving(false);
     }
