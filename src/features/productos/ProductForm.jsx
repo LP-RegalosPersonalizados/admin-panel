@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { Image, DollarSign, Star, Hash, FileText } from 'lucide-react';
 import { stripMeta } from '../../utils/stripMeta';
 import { PRODUCT_CATEGORIES } from '../../utils/constants';
+import Modal from '../../components/ui/Modal';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
 
 export default function ProductForm({ initial, onSave, onCancel }) {
   const cleaned = stripMeta(initial);
@@ -44,81 +48,60 @@ export default function ProductForm({ initial, onSave, onCancel }) {
     onSave(data);
   };
 
-  const labelClass = 'block text-sm font-medium mb-1';
-  const inputClass = 'w-full p-2 border border-slate-300 rounded-md text-sm';
   const checkClass = 'w-4 h-4';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-5">{cleaned ? 'Editar Producto' : 'Nuevo Producto'}</h2>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className={labelClass}>Nombre *</label>
-            <input name="name" value={form.name} onChange={handleChange} required className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Slug</label>
-            <input name="slug" value={form.slug} onChange={handleChange} className={inputClass} placeholder="auto desde nombre" />
-          </div>
-          <div>
-            <label className={labelClass}>Categoría</label>
-            <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
+    <Modal isOpen onClose={onCancel} title={cleaned ? 'Editar Producto' : 'Nuevo Producto'} size="lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Nombre *" name="name" value={form.name} onChange={handleChange} required />
+          <Input label="Slug" name="slug" value={form.slug} onChange={handleChange} placeholder="auto desde nombre" />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
+            <select name="category" value={form.category} onChange={handleChange} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100">
               {PRODUCT_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
           </div>
-          <div>
-            <label className={labelClass}>Precio (Bs)</label>
-            <input name="price" type="number" value={form.price} onChange={handleChange} className={inputClass} />
-          </div>
+          <Input label="Precio (Bs)" name="price" type="number" value={form.price} onChange={handleChange} icon={DollarSign} />
         </div>
 
-        <div className="mb-4">
-          <label className={labelClass}>Imagen URL</label>
-          <input name="image" value={form.image} onChange={handleChange} className={inputClass} />
+        <Input label="Imagen URL" name="image" value={form.image} onChange={handleChange} icon={Image} />
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Galería (1 URL por línea)</label>
+          <textarea name="gallery" value={form.gallery} onChange={handleChange} rows={3} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100" />
         </div>
 
-        <div className="mb-4">
-          <label className={labelClass}>Galería (1 URL por línea)</label>
-          <textarea name="gallery" value={form.gallery} onChange={handleChange} rows={3} className={inputClass} />
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
+          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100" />
         </div>
 
-        <div className="mb-4">
-          <label className={labelClass}>Descripción</label>
-          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className={inputClass} />
-        </div>
+        <Input label="Tags (separados por coma)" name="tags" value={form.tags} onChange={handleChange} icon={Hash} placeholder="ej: regalo, taza, personalizado" />
 
-        <div className="mb-4">
-          <label className={labelClass}>Tags (separados por coma)</label>
-          <input name="tags" value={form.tags} onChange={handleChange} className={inputClass} placeholder="ej: regalo, taza, personalizado" />
-        </div>
-
-        <fieldset className="border border-slate-200 rounded-lg p-4 mb-4">
-          <legend className="text-sm font-semibold px-1">Audiencia General</legend>
+        <fieldset className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <legend className="text-sm font-semibold px-1 text-slate-700 dark:text-slate-300">Audiencia General</legend>
           <div className="flex gap-6 mt-2">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="general_available" checked={form.general_available} onChange={handleChange} className={checkClass} /> Disponible</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="general_customizable" checked={form.general_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="general_available" checked={form.general_available} onChange={handleChange} className={checkClass} /> Disponible</label>
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="general_customizable" checked={form.general_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
           </div>
         </fieldset>
 
-        <fieldset className="border border-slate-200 rounded-lg p-4 mb-4">
-          <legend className="text-sm font-semibold px-1">Audiencia Business</legend>
+        <fieldset className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <legend className="text-sm font-semibold px-1 text-slate-700 dark:text-slate-300">Audiencia Business</legend>
           <div className="flex gap-6 mt-2">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="business_available" checked={form.business_available} onChange={handleChange} className={checkClass} /> Disponible</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="business_customizable" checked={form.business_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="business_available" checked={form.business_available} onChange={handleChange} className={checkClass} /> Disponible</label>
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="business_customizable" checked={form.business_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
           </div>
         </fieldset>
 
-        <div className="mb-6">
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className={checkClass} /> Destacado</label>
-        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className={checkClass} /> <Star size={14} className="text-amber-500" /> Destacado</label>
 
-        <div className="flex gap-3 justify-end">
-          <button type="button" onClick={onCancel} className="px-4 py-2 border border-slate-300 rounded-md text-sm cursor-pointer">Cancelar</button>
-          <button type="submit" className="px-4 py-2 bg-blue-500 text-white border-0 rounded-md text-sm cursor-pointer">Guardar</button>
+        <div className="flex gap-3 justify-end pt-2">
+          <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
+          <Button type="submit">Guardar</Button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

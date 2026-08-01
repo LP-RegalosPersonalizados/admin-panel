@@ -1,28 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getProductos } from '../../lib/productos';
+import { useData } from '../../context/DataContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import { stripMeta } from '../../utils/stripMeta';
+import { logActivity } from '../../utils/activityLog';
 import ProductosView from './ProductosView';
 
 export default function ProductosContainer() {
   const { state, dispatch, getEffectiveList } = usePendingChanges();
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { productos, loading, loadIfNeeded } = useData();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const load = useCallback(() => {
-    setLoading(true);
-    getProductos()
-      .then(setProductos)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
 
   const effectiveData = getEffectiveList('productos', productos);
 
@@ -42,6 +34,7 @@ export default function ProductosContainer() {
     } else {
       dispatch({ type: 'ADD_CREATE', resource: 'productos', data });
     }
+    logActivity({ type: editing ? 'update' : 'create', resource: 'producto', label: data.name || 'Sin nombre' });
     setShowForm(false);
     setEditing(null);
   }, [editing, dispatch]);
@@ -54,6 +47,7 @@ export default function ProductosContainer() {
     if (confirmDelete && confirmDelete.length > 0) {
       dispatch({ type: 'MARK_DELETE', resource: 'productos', ids: confirmDelete });
     }
+    logActivity({ type: 'delete', resource: 'producto', label: `${confirmDelete.length} producto(s)` });
     setConfirmDelete(null);
     setSelectedIds(new Set());
     setDeleteMode(false);

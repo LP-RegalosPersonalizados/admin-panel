@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { X, Upload, Trash2, Inbox } from 'lucide-react';
 import { usePendingChanges } from '../../context/PendingChangesContext';
+import Button from '../../components/ui/Button';
 import BatchSaveModal from './BatchSaveModal';
 import PendingResourceSection from './PendingResourceSection';
 
@@ -29,20 +31,28 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
       {/* Panel */}
       <div
         ref={panelRef}
-        className={`fixed top-0 right-0 z-40 h-full bg-white shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-40 h-full bg-white dark:bg-slate-800 shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } w-full md:w-80`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-          <h2 className="font-semibold text-sm">Cambios pendientes</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none cursor-pointer">✕</button>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+          <h2 className="font-semibold text-sm text-slate-700 dark:text-slate-200">Cambios pendientes</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md cursor-pointer"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           {totalChanges === 0 ? (
-            <p className="text-slate-400 text-sm text-center py-8">No hay cambios pendientes</p>
+            <div className="flex flex-col items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+              <Inbox size={32} className="mb-2" />
+              <p className="text-sm">No hay cambios pendientes</p>
+            </div>
           ) : (
             <div className="space-y-6">
               {(state.productos.creates.length > 0 || Object.keys(state.productos.updates).length > 0 || state.pendingDeletes.productos.length > 0) && (
@@ -74,19 +84,20 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
 
         {/* Footer */}
         {totalChanges > 0 && (
-          <div className="border-t border-slate-200 p-4 space-y-2">
-            <button
-              onClick={() => setShowBatchModal(true)}
-              className="w-full px-4 py-2.5 bg-blue-500 text-white border-0 rounded-lg text-sm font-medium cursor-pointer hover:bg-blue-600"
-            >
+          <div className="border-t border-slate-200 dark:border-slate-700 p-4 space-y-2">
+            <Button icon={Upload} className="w-full" onClick={() => setShowBatchModal(true)}>
               Guardar todo ({totalChanges})
-            </button>
-            <button
-              onClick={() => { if (confirm('¿Descartar todos los cambios pendientes?')) dispatch({ type: 'DISCARD_ALL' }); }}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm cursor-pointer hover:bg-slate-50"
+            </Button>
+            <Button
+              variant="outline"
+              icon={Trash2}
+              className="w-full"
+              onClick={() => {
+                if (confirm('¿Descartar todos los cambios pendientes?')) dispatch({ type: 'DISCARD_ALL' });
+              }}
             >
               Descartar todo
-            </button>
+            </Button>
           </div>
         )}
       </div>
