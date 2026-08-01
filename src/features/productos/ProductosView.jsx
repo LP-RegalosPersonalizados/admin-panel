@@ -1,5 +1,8 @@
+import { Plus, Trash2, Check, X } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import DataTable from '../../components/ui/DataTable';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
 import ProductForm from './ProductForm';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
@@ -15,7 +18,10 @@ const COLUMNS = [
   {
     key: 'featured',
     label: 'Destacado',
-    render: (v) => (v ? '✅' : '❌'),
+    render: (v) => (v
+      ? <Check size={16} className="text-emerald-500" />
+      : <X size={16} className="text-slate-300 dark:text-slate-600" />
+    ),
   },
 ];
 
@@ -42,30 +48,22 @@ export default function ProductosView({
     <Layout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl md:text-2xl font-bold">Productos</h1>
+          <h1 className="text-xl md:text-2xl font-bold dark:text-white">Productos</h1>
           {pendingCount > 0 && (
-            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded font-medium whitespace-nowrap">
-              {pendingCount} pendiente(s)
-            </span>
+            <Badge variant="warning">{pendingCount} pendiente(s)</Badge>
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
+          <Button
+            variant={deleteMode ? 'danger' : 'outline'}
+            icon={Trash2}
             onClick={onToggleDeleteMode}
-            className={`px-4 py-2 border rounded-md text-sm cursor-pointer ${
-              deleteMode
-                ? 'bg-red-500 text-white border-red-500'
-                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-            }`}
           >
             {deleteMode ? 'Cancelar' : 'Modo eliminar'}
-          </button>
-          <button
-            onClick={onNew}
-            className="px-4 py-2 bg-blue-500 text-white border-0 rounded-md text-sm cursor-pointer hover:bg-blue-600"
-          >
-            + Nuevo
-          </button>
+          </Button>
+          <Button icon={Plus} onClick={onNew}>
+            Nuevo
+          </Button>
         </div>
       </div>
 

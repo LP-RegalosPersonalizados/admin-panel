@@ -1,32 +1,27 @@
-import { useState, useEffect } from 'react';
-import { getProductos } from '../../lib/productos';
-import { getTrabajos } from '../../lib/trabajos';
+import { useEffect } from 'react';
+import { useData } from '../../context/DataContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import DashboardView from './DashboardView';
 
 export default function DashboardContainer() {
-  const [productos, setProductos] = useState([]);
-  const [trabajos, setTrabajos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { productos, trabajos, loading, loadIfNeeded } = useData();
   const { getResourceCounts } = usePendingChanges();
+
+  useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
+
+  const data = productos || [];
+  const tdata = trabajos || [];
 
   const pCounts = getResourceCounts('productos');
   const tCounts = getResourceCounts('trabajos');
 
-  useEffect(() => {
-    Promise.all([getProductos(), getTrabajos()])
-      .then(([p, t]) => { setProductos(p); setTrabajos(t); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  const categoryCount = new Set(productos.map(p => p.category)).size;
+  const categoryCount = new Set(data.map(p => p.category)).size;
 
   return (
     <DashboardView
       loading={loading}
-      productosCount={productos.length}
-      trabajosCount={trabajos.length}
+      productosCount={data.length}
+      trabajosCount={tdata.length}
       categoryCount={categoryCount}
       productosPending={pCounts.total}
       trabajosPending={tCounts.total}

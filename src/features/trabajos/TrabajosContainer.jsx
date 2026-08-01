@@ -1,28 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getTrabajos } from '../../lib/trabajos';
+import { useData } from '../../context/DataContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import { stripMeta } from '../../utils/stripMeta';
+import { logActivity } from '../../utils/activityLog';
+import { useToast } from '../../components/ui/Toast';
 import TrabajosView from './TrabajosView';
 
 export default function TrabajosContainer() {
   const { state, dispatch, getEffectiveList } = usePendingChanges();
-  const [trabajos, setTrabajos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { trabajos, loading, loadIfNeeded } = useData();
+  const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const load = useCallback(() => {
-    setLoading(true);
-    getTrabajos()
-      .then(setTrabajos)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
 
   const effectiveData = getEffectiveList('trabajos', trabajos);
 
@@ -42,9 +36,15 @@ export default function TrabajosContainer() {
     } else {
       dispatch({ type: 'ADD_CREATE', resource: 'trabajos', data });
     }
+    logActivity({ type: editing ? 'update' : 'create', resource: 'trabajo', label: data.title || 'Sin nombre' });
+    toast({
+      type: 'success',
+      title: editing ? 'Trabajo actualizado' : 'Trabajo creado',
+      message: data.title || 'Sin nombre',
+    });
     setShowForm(false);
     setEditing(null);
-  }, [editing, dispatch]);
+  }, [editing, dispatch, toast]);
 
   const handleDeleteSelected = useCallback((ids) => {
     setConfirmDelete(ids);
@@ -54,10 +54,16 @@ export default function TrabajosContainer() {
     if (confirmDelete && confirmDelete.length > 0) {
       dispatch({ type: 'MARK_DELETE', resource: 'trabajos', ids: confirmDelete });
     }
+    logActivity({ type: 'delete', resource: 'trabajo', label: `${confirmDelete.length} trabajo(s)` });
+    toast({
+      type: 'warning',
+      title: 'Marcados para eliminar',
+      message: `${confirmDelete.length} trabajo(s). Se eliminarán al guardar todo.`,
+    });
     setConfirmDelete(null);
     setSelectedIds(new Set());
     setDeleteMode(false);
-  }, [confirmDelete, dispatch]);
+  }, [confirmDelete, dispatch, toast]);
 
   const pendingCount =
     state.trabajos.creates.length +
