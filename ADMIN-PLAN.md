@@ -23,28 +23,61 @@
 
 ---
 
+## 📊 Estado del Proyecto
+
+> Última actualización: **2026-08-01**
+
+| Fase | Estado | Detalle |
+|---|---|---|
+| **1 — Infraestructura Base** | ✅ **100%** | DataContext, ThemeContext, activityLog, UI kit, refactor completo, correcciones de estilos |
+| **2 — Layout + Buscador + Dark Mode** | 🟡 **~65%** | Dark Mode ✅ · PendingChangesPanel ✅ · Layout parcial · **GlobalSearch pendiente** |
+| **3 — Dashboard con Reportes** | 🔴 **~20%** | Solo StatCard rediseñado. Resto pendiente (charts, feed, skeleton) |
+| **4 — Gestión de Categorías** | ⚪ Sin empezar | Bloqueado por API `/api/categorias` (fallback localStorage disponible) |
+| **5 — Gestión de Pedidos** | ⚪ Sin empezar | **Bloqueado** por API `/api/pedidos` (PII — no usar mock) |
+| **6 — Exportar + Utilidades** | ⚪ Sin empezar | Independiente |
+
+**Orden de trabajo recomendado:** cerrar Fase 2 → Fase 3 → (Fase 4/5 cuando exista backend).
+
+### Extras corregidos (fuera del checklist original)
+
+Durante Fase 1 se corrigieron bugs no previstos que bloqueaban la experiencia:
+
+1. **Tailwind scoped por Astro** — El `@import "tailwindcss"` dentro de `<style>` scoped generaba selectores `data-astro-cid-*` y rompía el preflight global (inputs fuera del box, containers sobrepuestos). **Solución:** CSS centralizado en `src/styles/global.css`.
+2. **Dark mode seguía al OS** — Usaba `prefers-color-scheme` en vez de la clase `.dark`, por lo que el toggle no hacía nada. **Solución:** `@custom-variant dark (&:where(.dark, .dark *))` en `global.css`.
+3. **Datos desactualizados tras guardar** — `DataContext` nunca refrescaba tras el batch save; el admin mostraba precios viejos aunque la API tuviera los nuevos. **Solución:** `refreshAll()` llamado tras `CLEAR_ALL` en `BatchSaveModal`.
+4. **Spinner pegado en "cargando"** — Faltaba `setSaving(false)` en la rama de éxito del batch save. **Solución:** corregido.
+5. **Panel pendientes atascado en móvil** — La top bar (`z-50`) tapaba el header del panel (`z-40`), imposible cerrarlo. **Solución:** panel `z-[60]`, overlay `z-[55]`, modales `z-[70]`, + bloqueo de scroll.
+6. **`confirm()` nativo** — Reemplazado por `ConfirmDialog` en "Descartar todo".
+7. **Toast sin uso** — Integrado en flujos reales (crear/editar/eliminar, batch save, descartar).
+
+---
+
 ## Arquitectura Actual
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
 │  BrowserRouter                                                             │
 │  ┌─ AuthProvider (token + email en localStorage)                          │
-│  │  ┌─ DataProvider ──────────────────────────────────┐                   │
-│  │  │  Caché compartida en memoria React               │                   │
-│  │  │  (productos[], trabajos[], pedidos[], categorias[])│                 │
-│  │  │  ┌─ PendingChangesProvider (reducer + localStorage)                 │
-│  │  │  │  ┌─ Routes                                                     │
-│  │  │  │  │  ├─ /              → AuthContainer  (público)                │
-│  │  │  │  │  ├─ /dashboard     → DashboardContainer (protegido)          │
-│  │  │  │  │  ├─ /productos     → ProductosContainer (protegido)          │
-│  │  │  │  │  ├─ /trabajos      → TrabajosContainer (protegido)           │
-│  │  │  │  │  ├─ /categorias    → CategoriasContainer (protegido)         │
-│  │  │  │  │  ├─ /pedidos       → PedidosContainer (protegido)            │
-│  │  │  │  │  └─ *              → Navigate to /                           │
-│  │  │  │  └────────────────────────────────────────────────────          │
-│  │  │  └────────────────────────────────────────────────────              │
-│  │  └────────────────────────────────────────────────────                  │
-│  └────────────────────────────────────────────────────                      │
+│  │  ┌─ ThemeProvider (dark/light + localStorage)                          │
+│  │  │  ┌─ DataProvider ────────────────────────────────┐                  │
+│  │  │  │  Caché compartida en memoria React             │                 │
+│  │  │  │  (productos[], trabajos[], pedidos[], categorias[])│              │
+│  │  │  │  ┌─ PendingChangesProvider (reducer + localStorage)              │
+│  │  │  │  │  ┌─ ToastProvider (notificaciones)                           │
+│  │  │  │  │  │  ┌─ Routes                                                │
+│  │  │  │  │  │  │  ├─ /              → AuthContainer  (público)          │
+│  │  │  │  │  │  │  ├─ /dashboard     → DashboardContainer (protegido)    │
+│  │  │  │  │  │  │  ├─ /productos     → ProductosContainer (protegido)    │
+│  │  │  │  │  │  │  ├─ /trabajos      → TrabajosContainer (protegido)     │
+│  │  │  │  │  │  │  ├─ /categorias    → CategoriasContainer (protegido)   │
+│  │  │  │  │  │  │  ├─ /pedidos       → PedidosContainer (protegido)      │
+│  │  │  │  │  │  │  └─ *              → Navigate to /                     │
+│  │  │  │  │  │  └──────────────────────────────────────────────────      │
+│  │  │  │  │  └──────────────────────────────────────────────────          │
+│  │  │  │  └──────────────────────────────────────────────────              │
+│  │  │  └──────────────────────────────────────────────────                  │
+│  │  └──────────────────────────────────────────────────                      │
+│  └──────────────────────────────────────────────────                          │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -369,6 +402,7 @@ import * as Lucide from 'lucide-react';  // ← aumenta bundle size
 
 ## Fase 1: Infraestructura Base
 
+> **✅ COMPLETA (2026-08-01)** — Todos los puntos 1.1–1.9 implementados y verificados con `npm run build`.
 > **Objetivo:** Establecer la base visual + el sistema de datos compartido + utilidades.
 > Todo lo que sigue depende de esta fase — por eso DataContext ya está aquí.
 
@@ -475,7 +509,7 @@ export default function AppRouter() {
 }
 ```
 
-> **Nota:** `PendingChangesProvider` va dentro de `DataProvider` porque los Containers consumen ambos (`useData()` + `usePendingChanges()`). El orden de providers es: Auth → Data → Pending → Routes.
+> **Nota:** `PendingChangesProvider` va dentro de `DataProvider` porque los Containers consumen ambos (`useData()` + `usePendingChanges()`). El orden de providers implementado es: Auth → Theme → Data → Pending → Toast → Routes (Theme y Toast se añadieron además de lo planificado).
 
 ### 1.4 Crear `src/context/ThemeContext.jsx`
 
@@ -489,35 +523,38 @@ export default function AppRouter() {
 
 ### 1.5 Refactor `src/pages/index.astro`
 
-Añadir en `<head>`:
-```html
-<script>
-  (function() {
-    const theme = localStorage.getItem('theme');
-    if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    }
-  })();
-</script>
+> **⚠️ Implementado con enfoque mejorado:** en vez de `<style>` scoped, el CSS se centralizó en `src/styles/global.css`. Razón: el `<style>` scoped de Astro generaba selectores `data-astro-cid-*` que rompían el preflight de Tailwind (ver "Extras corregidos").
+
+`src/pages/index.astro` actual:
+```astro
+---
+import AppRouter from '../middleware/AppRouter';
+import '../styles/global.css';
+---
+<html lang="es">
+  <head>
+    <!-- Script anti-FOUC: aplica .dark antes del render -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <AppRouter client:only="react" />
+  </body>
+</html>
 ```
 
-Actualizar `@theme` en `<style>`:
+`src/styles/global.css` (núcleo del design system):
 ```css
-@theme {
-  --animate-slide-up: slide-up 0.2s ease-out;
-  --animate-fade-in: fade-in 0.15s ease-out;
-  --animate-slide-right: slide-right 0.25s ease-out;
-  --animate-spin-slow: spin 2s linear infinite;
-  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
-}
-@keyframes slide-right {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@theme { /* animaciones + font-sans */ }
+@layer base { /* body bg/text, color-scheme, scrollbar, selection */ }
 ```
 
 ### 1.6 Crear `src/utils/activityLog.js`
@@ -674,88 +711,123 @@ logActivity({ type: 'delete', resource: 'trabajo', label: `${confirmDelete.lengt
 
 ## Fase 2: Layout + Navegación + Buscador + Dark Mode
 
+> **Estado: 🟡 ~65%** — Dark Mode (2.3) y PendingChangesPanel (2.4) COMPLETOS. Layout (2.1) parcial. Buscador Global (2.2) PENDIENTE.
 > **DataContext ya está disponible** — el buscador global lo usa para buscar sin llamadas API.
 
-### 2.1 Layout rediseñado
+### 2.1 Layout rediseñado — 🟡 Parcial
 
-**Sidebar Desktop (`md:w-64`):**
+**Estado actual (implementado):**
+- Sidebar desktop fijo: `hidden md:flex fixed left-0 w-60 bg-slate-900 dark:bg-slate-950`
+- Active state: `bg-slate-700` (plan: reemplazar por `border-l-2 border-blue-400`)
+- Mobile top bar: `Menu · Admin · [theme] · Bell` (falta `Search`)
+- Mobile menu overlay + dark toggle + logout funcionales
+
+**Por hacer para cerrar 2.1:**
+- [ ] Sidebar `w-60` → `md:w-64` y ajustar `main` a `md:ml-64`
+- [ ] Active state con barra izquierda: `border-l-2 border-blue-400` en vez de `bg-slate-700`
+- [ ] Añadir links **Categorías** (`Tags`) y **Pedidos** (`ShoppingCart`) al sidebar — solo visibles cuando existan sus rutas (Fase 4/5), o renderizarlas deshabilitadas hasta entonces
+- [ ] Botón `Search` en la topbar mobile y en el sidebar (abre `GlobalSearch`)
+
+**Referencia visual:**
 ```
-┌──────────────────────────┐
-│ Package  Admin            │
-│ ───────────────────────── │
-│ LayoutDashboard  Dashboard│ ← active: bg-slate-700
-│ Package          Productos│ ← hover: bg-slate-800
-│ Briefcase        Trabajos │
-│ Tags             Categorías│
-│ ShoppingCart     Pedidos  │
-│ ───────────────────────── │
-│ Moon / Sun       DarkMode │
-│ ───────────────────────── │
-│ user@email.com            │
-│ LogOut           Cerrar   │
-└──────────────────────────┘
+Sidebar Desktop (md:w-64):          Mobile Top Bar:
+┌────────────────────────┐          ┌──────────────────────────┐
+│ Package  Admin         │          │ Menu  Admin  Search  Bell │
+│ ────────────────────── │          └──────────────────────────┘
+│ LayoutDashboard ▸Dashboard│ ← border-l-2 border-blue-400
+│ Package         ▸Productos│
+│ Briefcase       ▸Trabajos │
+│ Tags            ▸Categorías│ ← Fase 4
+│ ShoppingCart    ▸Pedidos  │ ← Fase 5
+│ ────────────────────── │
+│ Moon / Sun       DarkMode│
+│ user@email.com          │
+│ LogOut           Cerrar │
+└────────────────────────┘
 ```
 
-**Mobile Top Bar:**
-```
-┌──────────────────────────┐
-│ Menu  Admin  Search  Bell │
-└──────────────────────────┘
-```
+### 2.2 Buscador Global — ❌ PENDIENTE
 
-**Implementación:**
-- Sidebar con `<nav>` fijo, `w-64`, `bg-slate-900 dark:bg-slate-950`
-- Links con ícono + label, active state con barra izquierda (`border-l-2 border-blue-400`)
-- Botón de pendientes con ícono `Bell` + badge count
-- Toggle dark mode con `Moon`/`Sun`
-- User section abajo con `LogOut`
+**Componente: `src/components/layout/GlobalSearch.jsx`** (o `src/components/ui/`)
 
-### 2.2 Buscador Global
+**Requisitos:**
+- Trigger: `Ctrl+K` (atajo global) o click en ícono `Search` (topbar mobile + sidebar)
+- **Lee datos de DataContext** (`useData()`) — cero llamadas API propias
+- Filtra en tiempo real productos y trabajos (por `name`, `title`, `category`)
+- Resultados agrupados: secciones "Productos" y "Trabajos"
+- Navegación por teclado: `↑`/`↓` para moverse, `Enter` para navegar, `Escape` para cerrar
+- Cada resultado navega a la vista del recurso (edición) o a `/productos`/`/trabajos` según decisión de detalle
 
-**Componente: `GlobalSearch.jsx`**
+**Decisión pendiente (navegación):** El plan original proponía rutas `productos/:id` y `trabajos/:id`, que hoy **no existen**. Opciones:
+1. Crear rutas de detalle `productos/:id` / `trabajos/:id` (más fiel al plan, más trabajo)
+2. Navegar a `/productos?buscar=X` y resaltar/filtrar en la tabla existente (más simple, sin rutas nuevas)
 
-- Trigger: `Ctrl+K` o click en ícono `Search` en topbar
-- **Lee datos de DataContext** (`useData()`) — no hace fetch propio
-- Filtra en tiempo real productos y trabajos
-- Resultados agrupados: "Productos" y "Trabajos"
-- Cada resultado es un link navegable a `productos/:id` o `trabajos/:id`
-- Navegación por teclado (↑↓ + Enter)
+> **Recomendado:** Opción 2 por simplicidad y consistencia con la arquitectura actual (sin crear rutas nuevas hasta Fase 3+).
 
+**Estructura del componente:**
 ```jsx
-// Estructura:
-// <div className="fixed inset-0 z-50">
-//   <div className="bg-black/50" onClick={onClose} />
-//   <div className="max-w-xl mx-auto mt-20 bg-white rounded-xl shadow-2xl dark:bg-slate-800">
-//     <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-slate-700">
-//       <Search size={18} className="text-slate-400" />
-//       <input autoFocus placeholder="Buscar productos o trabajos..." />
-//       <kbd className="text-xs text-slate-400">ESC</kbd>
-//     </div>
-//     <div className="max-h-80 overflow-y-auto p-2">
-//       {filteredProductos.map(p => <SearchResultItem ... />)}
-//       {filteredTrabajos.map(t => <SearchResultItem ... />)}
-//     </div>
-//   </div>
-// </div>
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, X, Package, Briefcase } from 'lucide-react';
+import { useData } from '../../context/DataContext';
+import Button from '../ui/Button';
+
+export default function GlobalSearch({ isOpen, onClose }) {
+  const { productos, trabajos } = useData();
+  const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Atajo global Ctrl+K (se registra en Layout, no acá)
+  // Filtrado con useMemo sobre productos/trabajos
+  // Resultados agrupados → lista plana con secciones
+  // keydown: ArrowUp/ArrowDown/Enter/Escape
+  // onClick en resultado → navigate(...) → onClose()
+  return (
+    <div className="fixed inset-0 z-[70]">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative max-w-xl mx-auto mt-20 bg-white rounded-xl shadow-2xl dark:bg-slate-800">
+        <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-slate-700">
+          <Search size={18} className="text-slate-400 shrink-0" />
+          <input ref={inputRef} autoFocus value={query}
+                 onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
+                 placeholder="Buscar productos o trabajos..."
+                 className="flex-1 bg-transparent outline-none dark:text-slate-100" />
+          <kbd className="text-xs text-slate-400">ESC</kbd>
+        </div>
+        <div className="max-h-80 overflow-y-auto p-2">
+          {/* Sección Productos + Sección Trabajos */}
+        </div>
+      </div>
+    </div>
+  );
+}
 ```
 
-### 2.3 Dark Mode Toggle
+**Estado del modal:** living en `Layout` (`searchOpen`). En móvil, `bottom sheet` (`items-end` como Modal) si se prefiere consistencia con el resto.
 
-- `ThemeContext` creado en Fase 1
-- Toggle en sidebar y topbar mobile
-- Persistencia en `localStorage`
-- Respeta `prefers-color-scheme` del sistema como default
-- Transición suave: `transition-colors duration-200`
+### 2.3 Dark Mode Toggle — ✅ COMPLETO
 
-### 2.4 PendingChangesPanel actualizado
+- `ThemeContext` creado en Fase 1 ✅
+- Toggle en sidebar (`Moon`/`Sun` con label) ✅
+- Toggle en topbar mobile (ícono) ✅
+- Persistencia en `localStorage` (clave `theme`) ✅
+- Default respeta `prefers-color-scheme` (en `index.astro` + `getInitialTheme`) ✅
+- Implementado con `@custom-variant dark` en `global.css` (no media query) ✅
 
-- Reemplazar emojis por íconos lucide:
-  - 🆕 → `PlusCircle` (text-blue-500)
-  - ✏️ → `Edit3` (text-amber-500)
-  - 🗑️ → `Trash2` (text-red-500)
-- Botón "Guardar todo" con `<Button icon={Upload}>`
-- Botón "Descartar todo" con `<Button variant="danger" icon={Trash2}>`
-- Dark mode completo
+**Extra:** se recomienda añadir `transition-colors duration-200` en el contenedor raíz (`Layout`) para transición suave.
+
+### 2.4 PendingChangesPanel actualizado — ✅ COMPLETO
+
+- Íconos lucide en secciones (`PlusCircle`, `Edit3`, `Trash2`) ✅
+- `PendingResourceSection` y `PendingItem` con lucide + dark mode ✅
+- Botón "Guardar todo" con `<Button icon={Upload}>` ✅
+- Botón "Descartar todo" con `<Button variant="outline" icon={Trash2}>` + `ConfirmDialog` (no `confirm()`) ✅
+- `BatchSaveModal` con `Modal` + `Button` + lucide + **`refreshAll()` tras éxito** ✅
+- **Fix móvil:** panel `z-[60]` (por encima de top bar `z-50`), overlay `z-[55]`, modales `z-[70]` ✅
+- **Bloqueo de scroll** del fondo mientras el panel está abierto ✅
+- **Toast** integrado en acciones (guardar, descartar, errores) ✅
 
 ---
 
@@ -1580,40 +1652,50 @@ Consideraciones de seguridad:
 
 ## Checklist de Implementación
 
-### Fase 1 — Infraestructura Base
-- [ ] Instalar `lucide-react` ✅
-- [ ] **Crear `DataContext.jsx` — caché compartida productos/trabajos**
-- [ ] **Integrar `DataProvider` en `AppRouter.jsx`**
-- [ ] **Refactor `ProductosContainer.jsx` → usar `useData()`**
-- [ ] **Refactor `TrabajosContainer.jsx` → usar `useData()`**
-- [ ] **Refactor `DashboardContainer.jsx` → usar `useData()`**
-- [ ] **Crear `activityLog.js` — persistencia localStorage**
-- [ ] **Integrar `logActivity()` en ProductosContainer y TrabajosContainer**
-- [ ] Crear `ThemeContext.jsx`
-- [ ] Actualizar `index.astro` (script anti-FOUC + animaciones)
-- [ ] Crear `Button.jsx` con variantes
-- [ ] Crear `Input.jsx` con label/error/icon
-- [ ] Crear `Badge.jsx`
-- [ ] Crear `Card.jsx`
-- [ ] Crear `Modal.jsx`
-- [ ] Crear `Toast` + `ToastProvider`
-- [ ] Refactor `Layout.jsx` → componentes + lucide
-- [ ] Refactor `DataTable.jsx` → botones + empty state lucide
-- [ ] Refactor `ConfirmDialog.jsx` → Modal + Button
-- [ ] Refactor `AuthView.jsx` → Input + Button + lucide
-- [ ] Refactor `ProductForm.jsx` → Input + Button
-- [ ] Refactor `TrabajoForm.jsx` → Input + Button
+### Fase 1 — Infraestructura Base ✅ COMPLETA
+- [x] Instalar `lucide-react`
+- [x] **Crear `DataContext.jsx` — caché compartida productos/trabajos**
+- [x] **Integrar `DataProvider` en `AppRouter.jsx`**
+- [x] **Refactor `ProductosContainer.jsx` → usar `useData()`**
+- [x] **Refactor `TrabajosContainer.jsx` → usar `useData()`**
+- [x] **Refactor `DashboardContainer.jsx` → usar `useData()`**
+- [x] **Crear `activityLog.js` — persistencia localStorage**
+- [x] **Integrar `logActivity()` en ProductosContainer y TrabajosContainer**
+- [x] Crear `ThemeContext.jsx`
+- [x] Actualizar `index.astro` (script anti-FOUC + `global.css`)
+- [x] Crear `Button.jsx` con variantes
+- [x] Crear `Input.jsx` con label/error/icon
+- [x] Crear `Badge.jsx`
+- [x] Crear `Card.jsx`
+- [x] Crear `Modal.jsx` (auto-focus primer input ✅)
+- [x] Crear `Toast` + `ToastProvider` (integrado en flujos ✅)
+- [x] Refactor `Layout.jsx` → componentes + lucide
+- [x] Refactor `DataTable.jsx` → botones + empty state lucide
+- [x] Refactor `ConfirmDialog.jsx` → Modal + Button
+- [x] Refactor `AuthView.jsx` → Input + Button + lucide
+- [x] Refactor `ProductForm.jsx` → Input + Button
+- [x] Refactor `TrabajoForm.jsx` → Input + Button
+- [x] Corregir Tailwind scoped por Astro → `global.css`
+- [x] Corregir dark mode (media query → `.dark` class)
+- [x] Corregir `refreshAll()` tras batch save (datos desactualizados)
+- [x] Corregir spinner pegado en BatchSaveModal
+- [x] Fix panel pendientes móvil (z-index + scroll lock)
 
 ### Fase 2 — Navegación + Buscador + Dark Mode
-- [ ] Rediseñar sidebar con íconos lucide y dark mode
-- [ ] Rediseñar mobile top bar
+- [x] Toggle dark mode funcional en sidebar y topbar mobile
+- [x] Refactor `PendingChangesPanel` con lucide + dark mode
+- [x] Refactor `PendingResourceSection` con lucide + dark mode
+- [x] Refactor `PendingItem` con lucide + dark mode
+- [x] Refactor `BatchSaveModal` con lucide + componentes + refreshAll
+- [x] Fix móvil: panel por encima de top bar, modales `z-[70]`
+- [ ] Sidebar `md:w-64` (hoy `w-60`) + `main md:ml-64`
+- [ ] Active state con barra `border-l-2 border-blue-400`
+- [ ] Botón `Search` en topbar mobile y sidebar
 - [ ] **Implementar `GlobalSearch.jsx` (usa `useData()`)**
 - [ ] Integrar `Ctrl+K` para abrir buscador
-- [ ] Toggle dark mode funcional en sidebar
-- [ ] Refactor `PendingChangesPanel` con lucide
-- [ ] Refactor `PendingResourceSection` con lucide
-- [ ] Refactor `PendingItem` con lucide
-- [ ] Refactor `BatchSaveModal` con lucide + componentes
+- [ ] Navegación por teclado en buscador (↑↓ + Enter)
+- [ ] Links Categorías/Pedidos en sidebar (cuando existan rutas)
+- [ ] Transición suave `transition-colors duration-200` en Layout
 
 ### Fase 3 — Dashboard
 - [ ] Crear `StatCard.jsx` con ícono, color dinámico, dark mode
@@ -1672,13 +1754,18 @@ Consideraciones de seguridad:
 
 | Riesgo | Mitigación |
 |---|---|
-| **FOUC en dark mode** | Script inline en `<head>` antes del render |
-| **DataContext — estado desactualizado** | `refreshAll()` disponible. Se llama tras batch save exitoso |
+| **FOUC en dark mode** | Script inline en `<head>` antes del render ✅ implementado |
+| **DataContext — estado desactualizado** | `refreshAll()` disponible. **Se llama tras batch save exitoso** ✅ corregido |
 | **ActivityLog — localStorage lleno** | Try/catch + límite 100 entradas |
-| **ProductosContainer antes usaba su propio fetch** | Refactor cuidadoso: reemplazar `getProductos()` por `useData()` |
+| **ProductosContainer antes usaba su propio fetch** | Refactorizado a `useData()` ✅ |
 | **useMemo — dependencias incorrectas** | Siempre depender de los datos fuente, no de computaciones |
 | **Romper flujo offline-first** | No modificar PendingChangesContext, solo UI |
 | **Duplicación `navigate` en BatchSaveModal** | ✅ Corregido |
+| **Tailwind scoped por Astro** | CSS centralizado en `global.css` ✅ |
+| **Dark mode solo respondía al OS** | `@custom-variant dark` con clase `.dark` ✅ |
+| **Panel pendientes atascado en móvil** | z-index por capas: topbar 50, panel 60, modales 70 ✅ |
+| **GlobalSearch — rutas de detalle inexistentes** | Decidir: navegar a `/productos?buscar=X` (recomendado) o crear `/:id` |
+| **Ctrl+K conflicto con navegador** | Prevenir default y evitar cuando hay input enfocado |
 
 ### Principios a mantener
 
@@ -1691,7 +1778,7 @@ Consideraciones de seguridad:
 
 ---
 
-> **Próximo paso:** Ejecutar `npm run build` después de cada fase para verificar que no hay errores de compilación.
+> **Próximo paso:** Cerrar **Fase 2** → refinar Layout (2.1) e implementar **GlobalSearch** (2.2) con `Ctrl+K`. Luego Fase 3 (Dashboard). Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
 >
 > **Documentación de referencia:**
 > - [Lucide React Icons](https://lucide.dev/icons/)
