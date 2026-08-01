@@ -40,7 +40,7 @@
 
 ### Extras corregidos (fuera del checklist original)
 
-Durante Fase 1 se corrigieron bugs no previstos que bloqueaban la experiencia:
+Durante Fases 1 y 2 se corrigieron bugs no previstos que bloqueaban la experiencia:
 
 1. **Tailwind scoped por Astro** — El `@import "tailwindcss"` dentro de `<style>` scoped generaba selectores `data-astro-cid-*` y rompía el preflight global (inputs fuera del box, containers sobrepuestos). **Solución:** CSS centralizado en `src/styles/global.css`.
 2. **Dark mode seguía al OS** — Usaba `prefers-color-scheme` en vez de la clase `.dark`, por lo que el toggle no hacía nada. **Solución:** `@custom-variant dark (&:where(.dark, .dark *))` en `global.css`.
@@ -49,6 +49,7 @@ Durante Fase 1 se corrigieron bugs no previstos que bloqueaban la experiencia:
 5. **Panel pendientes atascado en móvil** — La top bar (`z-50`) tapaba el header del panel (`z-40`), imposible cerrarlo. **Solución:** panel `z-[60]`, overlay `z-[55]`, modales `z-[70]`, + bloqueo de scroll.
 6. **`confirm()` nativo** — Reemplazado por `ConfirmDialog` en "Descartar todo".
 7. **Toast sin uso** — Integrado en flujos reales (crear/editar/eliminar, batch save, descartar).
+8. **Doble X en los buscadores de lista** — Los inputs de búsqueda usaban `type="search"`, lo que hacía que el navegador (Chrome/Edge/Safari) renderizara su botón nativo de limpiar (una X) que se superponía con la X personalizada ya existente — al escribir o al pasar el cursor se veían 2–3 X al mismo tiempo. **Solución:** cambiar a `type="text"` en `ProductosView.jsx` y `TrabajosView.jsx` (la X personalizada basta; se elimina la nativa).
 
 ---
 
@@ -1719,7 +1720,7 @@ Consideraciones de seguridad:
 
 ---
 
-> **Próximo paso:** **Fase 2 completa ✅** (Layout, navegación, GlobalSearch con `Ctrl+K`, dark mode). Continuar con **Fase 3 (Dashboard)**: CategoryBarChart, MiniStatsGrid, ActivityFeed, QuickActions, DashboardSkeleton y el rediseño completo de DashboardView. Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
+> **Próximo paso:** **Fase 2 completa ✅** (Layout, navegación, GlobalSearch con `Ctrl+K`, dark mode; fix de doble X en buscadores aplicado). Continuar con **Fase 3 (Dashboard)**: CategoryBarChart, MiniStatsGrid, ActivityFeed, QuickActions, DashboardSkeleton y el rediseño completo de DashboardView. Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
 >
 > **Documentación de referencia:**
 > - [Lucide React Icons](https://lucide.dev/icons/)
