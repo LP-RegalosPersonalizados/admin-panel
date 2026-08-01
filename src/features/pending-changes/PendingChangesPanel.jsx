@@ -23,19 +23,24 @@ export default function PendingChangesPanel({ isOpen, onClose }) {
     const handler = (e) => {
       if (e.key === 'Escape') onClose();
     };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handler);
+    };
   }, [isOpen, onClose]);
 
   return (
     <>
       {/* Overlay */}
-      {isOpen && <div className="fixed inset-0 z-30 bg-black/30 md:bg-black/20" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 z-[55] bg-black/30 md:bg-black/20" onClick={onClose} />}
 
       {/* Panel */}
       <div
         ref={panelRef}
-        className={`fixed top-0 right-0 z-40 h-full bg-white dark:bg-slate-800 shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-[60] h-full bg-white dark:bg-slate-800 shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } w-full md:w-80`}
       >

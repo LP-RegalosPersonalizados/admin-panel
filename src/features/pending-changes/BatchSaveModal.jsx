@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { usePendingChanges } from '../../context/PendingChangesContext';
+import { useData } from '../../context/DataContext';
 import { batchSave as batchSaveProductos, batchDelete as batchDeleteProductos } from '../../lib/productos';
 import { batchSave as batchSaveTrabajos, batchDelete as batchDeleteTrabajos } from '../../lib/trabajos';
 import Modal from '../../components/ui/Modal';
@@ -10,6 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 
 export default function BatchSaveModal({ isOpen, onClose }) {
   const { state, getResourceCounts, dispatch } = usePendingChanges();
+  const { refreshAll } = useData();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
@@ -75,7 +77,9 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       if (errors.length === 0) {
         dispatch({ type: 'CLEAR_ALL' });
         if (DEPLOY_HOOK) triggerVercelBuild();
+        await refreshAll();
         toast({ type: 'success', title: 'Cambios guardados', message: 'Todo se sincronizó correctamente.' });
+        setSaving(false);
         setResult({ success: true });
         setTimeout(() => { navigate('/dashboard', { replace: true }); }, 1200);
       } else {
