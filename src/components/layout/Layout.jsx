@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Briefcase, Bell, LogOut, Menu, X, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Package, Briefcase, Bell, LogOut, Menu, X, Moon, Sun, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import PendingChangesPanel from '../../features/pending-changes/PendingChangesPanel';
+import GlobalSearch from './GlobalSearch';
 
 const navLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/productos', label: 'Productos', icon: Package },
   { to: '/trabajos', label: 'Trabajos', icon: Briefcase },
 ];
+
+const navLinkClass = (active) =>
+  `flex items-center gap-3 px-4 py-2.5 mb-1 border-l-2 rounded-lg text-white no-underline transition-colors duration-150 ${
+    active
+      ? 'border-blue-400 bg-slate-700/40'
+      : 'border-transparent hover:bg-slate-800'
+  }`;
 
 export default function Layout({ children }) {
   const { email, logout } = useAuth();
@@ -19,20 +27,35 @@ export default function Layout({ children }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 dark:bg-slate-950 text-white px-4 py-3 flex items-center gap-3">
-        <button onClick={() => setMobileMenuOpen(true)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer">
+        <button onClick={() => setMobileMenuOpen(true)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Abrir menú">
           <Menu size={20} />
         </button>
         <span className="font-semibold">Admin</span>
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={toggleTheme} className="p-1.5 hover:bg-slate-800 rounded-md cursor-pointer">
+          <button onClick={() => setSearchOpen(true)} className="p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Buscar">
+            <Search size={16} />
+          </button>
+          <button onClick={toggleTheme} className="p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cambiar tema">
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button onClick={() => setPanelOpen(true)} className="relative p-1.5 hover:bg-slate-800 rounded-md cursor-pointer">
+          <button onClick={() => setPanelOpen(true)} className="relative p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cambios pendientes">
             <Bell size={18} />
             {pendingCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium">
@@ -50,7 +73,7 @@ export default function Layout({ children }) {
           <nav className="relative w-64 bg-slate-900 dark:bg-slate-950 text-white h-full p-5 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Admin</h2>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer">
+              <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cerrar menú">
                 <X size={20} />
               </button>
             </div>
@@ -61,15 +84,21 @@ export default function Layout({ children }) {
                   key={l.to}
                   to={l.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-2.5 mb-1 rounded-lg text-white no-underline ${
-                    location.pathname === l.to ? 'bg-slate-700' : 'hover:bg-slate-800'
-                  }`}
+                  className={navLinkClass(location.pathname === l.to)}
                 >
                   <Icon size={18} />
                   <span>{l.label}</span>
                 </Link>
               );
             })}
+            <button
+              onClick={() => { setSearchOpen(true); setMobileMenuOpen(false); }}
+              className="mt-1 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white no-underline border-l-2 border-transparent hover:bg-slate-800 cursor-pointer transition-colors duration-150"
+            >
+              <Search size={18} />
+              <span>Buscar</span>
+              <kbd className="ml-auto text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Ctrl K</kbd>
+            </button>
             <div className="mt-auto pt-5 border-t border-slate-700">
               <p className="text-xs text-slate-400 truncate">{email}</p>
               <button
@@ -85,7 +114,7 @@ export default function Layout({ children }) {
       )}
 
       {/* Desktop sidebar */}
-      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-slate-900 dark:bg-slate-950 text-white p-5 flex-col z-20 shadow-lg">
+      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 md:w-64 bg-slate-900 dark:bg-slate-950 text-white p-5 flex-col z-20 shadow-lg">
         <div className="mb-6 px-2">
           <h2 className="text-lg font-bold">Admin</h2>
           <p className="text-xs text-slate-400 mt-0.5">Recuerdos Compartidos</p>
@@ -96,15 +125,23 @@ export default function Layout({ children }) {
             <Link
               key={l.to}
               to={l.to}
-              className={`flex items-center gap-3 px-4 py-2.5 mb-1 rounded-lg text-white no-underline ${
-                location.pathname === l.to ? 'bg-slate-700' : 'hover:bg-slate-800'
-              }`}
+              className={navLinkClass(location.pathname === l.to)}
             >
               <Icon size={18} />
               <span>{l.label}</span>
             </Link>
           );
         })}
+
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="mt-1 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white no-underline border-l-2 border-transparent hover:bg-slate-800 cursor-pointer transition-colors duration-150"
+        >
+          <Search size={18} />
+          <span>Buscar</span>
+          <kbd className="ml-auto text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Ctrl K</kbd>
+        </button>
+
         <button
           onClick={() => setPanelOpen(true)}
           className="mt-3 w-full flex items-center justify-between px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm cursor-pointer"
@@ -139,12 +176,15 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Main content */}
-      <main className="px-4 py-4 pt-14 md:ml-60 md:px-8 md:py-8 md:pt-0">
+      <main className="px-4 py-4 pt-14 md:ml-64 md:px-8 md:py-8 md:pt-0">
         {children}
       </main>
 
       {/* Pending changes panel */}
       <PendingChangesPanel isOpen={panelOpen} onClose={() => setPanelOpen(false)} />
+
+      {/* Global search */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

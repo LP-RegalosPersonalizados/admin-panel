@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import { stripMeta } from '../../utils/stripMeta';
@@ -10,6 +11,8 @@ export default function ProductosContainer() {
   const { state, dispatch, getEffectiveList } = usePendingChanges();
   const { productos, loading, loadIfNeeded } = useData();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('buscar') || '';
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -19,6 +22,18 @@ export default function ProductosContainer() {
   useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
 
   const effectiveData = getEffectiveList('productos', productos);
+
+  const filteredData = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return effectiveData;
+    return effectiveData.filter((item) =>
+      [item.name, item.category].some((val) => val != null && String(val).toLowerCase().includes(q))
+    );
+  }, [effectiveData, query]);
+
+  const handleSearch = useCallback((value) => {
+    setSearchParams(value.trim() ? { buscar: value.trim() } : {});
+  }, [setSearchParams]);
 
   const handleSave = useCallback((data) => {
     if (editing) {
@@ -72,7 +87,9 @@ export default function ProductosContainer() {
 
   return (
     <ProductosView
-      effectiveData={effectiveData}
+      effectiveData={filteredData}
+      searchQuery={query}
+      onSearchChange={handleSearch}
       loading={loading}
       showForm={showForm}
       editing={editing}

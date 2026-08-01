@@ -30,7 +30,7 @@
 | Fase | Estado | Detalle |
 |---|---|---|
 | **1 — Infraestructura Base** | ✅ **100%** | DataContext, ThemeContext, activityLog, UI kit, refactor completo, correcciones de estilos |
-| **2 — Layout + Buscador + Dark Mode** | 🟡 **~65%** | Dark Mode ✅ · PendingChangesPanel ✅ · Layout parcial · **GlobalSearch pendiente** |
+| **2 — Layout + Buscador + Dark Mode** | ✅ **100%** | Dark Mode · PendingChangesPanel · Layout `md:w-64` + active `border-l-2` · GlobalSearch con `Ctrl+K` · búsqueda local en listas con `?buscar=` |
 | **3 — Dashboard con Reportes** | 🔴 **~20%** | Solo StatCard rediseñado. Resto pendiente (charts, feed, skeleton) |
 | **4 — Gestión de Categorías** | ⚪ Sin empezar | Bloqueado por API `/api/categorias` (fallback localStorage disponible) |
 | **5 — Gestión de Pedidos** | ⚪ Sin empezar | **Bloqueado** por API `/api/pedidos` (PII — no usar mock) |
@@ -711,101 +711,41 @@ logActivity({ type: 'delete', resource: 'trabajo', label: `${confirmDelete.lengt
 
 ## Fase 2: Layout + Navegación + Buscador + Dark Mode
 
-> **Estado: 🟡 ~65%** — Dark Mode (2.3) y PendingChangesPanel (2.4) COMPLETOS. Layout (2.1) parcial. Buscador Global (2.2) PENDIENTE.
-> **DataContext ya está disponible** — el buscador global lo usa para buscar sin llamadas API.
+> **Estado: ✅ COMPLETA (2026-08-01)** — Todos los puntos 2.1–2.4 implementados y verificados con `npm run build`.
+> **DataContext disponible** — el buscador global lo usa para buscar sin llamadas API.
 
-### 2.1 Layout rediseñado — 🟡 Parcial
+### 2.1 Layout rediseñado — ✅ Completo
 
-**Estado actual (implementado):**
-- Sidebar desktop fijo: `hidden md:flex fixed left-0 w-60 bg-slate-900 dark:bg-slate-950`
-- Active state: `bg-slate-700` (plan: reemplazar por `border-l-2 border-blue-400`)
-- Mobile top bar: `Menu · Admin · [theme] · Bell` (falta `Search`)
-- Mobile menu overlay + dark toggle + logout funcionales
+**Implementado:**
+- Sidebar desktop fijo: `hidden md:flex fixed left-0 w-60 md:w-64 bg-slate-900 dark:bg-slate-950` + `<main md:ml-64>`
+- Active state con barra izquierda: `border-l-2 border-blue-400 bg-slate-700/40` (desktop y menú móvil), hover `bg-slate-800`
+- Mobile top bar: `Menu · Admin · Search · theme · Bell` (ícono `Search` abre el buscador global)
+- Botón `Search` en sidebar desktop con hint `<kbd>Ctrl K</kbd>`
+- Atajo global `Ctrl+K` / `Cmd+K` (con `preventDefault`) registrado en Layout
+- Links **Categorías** y **Pedidos** NO se muestran aún (se agregan en Fase 4/5 cuando existan sus rutas)
+- Transición suave: `transition-colors duration-200` en el contenedor raíz
+- `GlobalSearch` renderizado en el Layout (`isOpen`/`onClose`)
 
-**Por hacer para cerrar 2.1:**
-- [ ] Sidebar `w-60` → `md:w-64` y ajustar `main` a `md:ml-64`
-- [ ] Active state con barra izquierda: `border-l-2 border-blue-400` en vez de `bg-slate-700`
-- [ ] Añadir links **Categorías** (`Tags`) y **Pedidos** (`ShoppingCart`) al sidebar — solo visibles cuando existan sus rutas (Fase 4/5), o renderizarlas deshabilitadas hasta entonces
-- [ ] Botón `Search` en la topbar mobile y en el sidebar (abre `GlobalSearch`)
+### 2.2 Buscador Global — ✅ Completo
 
-**Referencia visual:**
-```
-Sidebar Desktop (md:w-64):          Mobile Top Bar:
-┌────────────────────────┐          ┌──────────────────────────┐
-│ Package  Admin         │          │ Menu  Admin  Search  Bell │
-│ ────────────────────── │          └──────────────────────────┘
-│ LayoutDashboard ▸Dashboard│ ← border-l-2 border-blue-400
-│ Package         ▸Productos│
-│ Briefcase       ▸Trabajos │
-│ Tags            ▸Categorías│ ← Fase 4
-│ ShoppingCart    ▸Pedidos  │ ← Fase 5
-│ ────────────────────── │
-│ Moon / Sun       DarkMode│
-│ user@email.com          │
-│ LogOut           Cerrar │
-└────────────────────────┘
-```
+**Componente: `src/components/layout/GlobalSearch.jsx`**
 
-### 2.2 Buscador Global — ❌ PENDIENTE
+**Implementado:**
+- Trigger: `Ctrl+K`/`Cmd+K` (registrado en Layout) o click en ícono `Search` (topbar mobile + sidebar)
+- **Lee datos de DataContext** (`useData()`) + `usePendingChanges().getEffectiveList` → incluye items offline pendientes. Cero llamadas API
+- Filtra en tiempo real productos y trabajos por `name`/`title` y `category` (case-insensitive)
+- Resultados agrupados: secciones "Productos" (`Package`) y "Trabajos" (`Briefcase`), cada item con categoría y badges "Nuevo"/"Pendiente"
+- Navegación por teclado: `↑`/`↓` (con wrap y `scrollIntoView`), `Enter` navega al item activo, `Escape` cierra
+- Navegación con mouse: `onMouseMove` actualiza el item activo
+- Click / `Enter` → `navigate('/productos?buscar=<name>')` o `/trabajos?buscar=<title>` (**Opción 2:** filtro en la tabla existente, sin rutas de detalle). Se usa el nombre del item (no el término tecleado) para que el item exacto aparezca arriba
+- UI: overlay `z-[70]`, backdrop `bg-black/50`, contenedor `max-w-xl` centrado con animaciones `animate-fade-in`, dark mode completo, estados vacíos (sin query / sin resultados) y footer con hints de teclado
+- Se resetea la query al abrir
 
-**Componente: `src/components/layout/GlobalSearch.jsx`** (o `src/components/ui/`)
+### 2.2b Búsqueda local en listas (Productos / Trabajos)
 
-**Requisitos:**
-- Trigger: `Ctrl+K` (atajo global) o click en ícono `Search` (topbar mobile + sidebar)
-- **Lee datos de DataContext** (`useData()`) — cero llamadas API propias
-- Filtra en tiempo real productos y trabajos (por `name`, `title`, `category`)
-- Resultados agrupados: secciones "Productos" y "Trabajos"
-- Navegación por teclado: `↑`/`↓` para moverse, `Enter` para navegar, `Escape` para cerrar
-- Cada resultado navega a la vista del recurso (edición) o a `/productos`/`/trabajos` según decisión de detalle
-
-**Decisión pendiente (navegación):** El plan original proponía rutas `productos/:id` y `trabajos/:id`, que hoy **no existen**. Opciones:
-1. Crear rutas de detalle `productos/:id` / `trabajos/:id` (más fiel al plan, más trabajo)
-2. Navegar a `/productos?buscar=X` y resaltar/filtrar en la tabla existente (más simple, sin rutas nuevas)
-
-> **Recomendado:** Opción 2 por simplicidad y consistencia con la arquitectura actual (sin crear rutas nuevas hasta Fase 3+).
-
-**Estructura del componente:**
-```jsx
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, X, Package, Briefcase } from 'lucide-react';
-import { useData } from '../../context/DataContext';
-import Button from '../ui/Button';
-
-export default function GlobalSearch({ isOpen, onClose }) {
-  const { productos, trabajos } = useData();
-  const [query, setQuery] = useState('');
-  const [activeIndex, setActiveIndex] = useState(0);
-  const inputRef = useRef(null);
-  const navigate = useNavigate();
-
-  // Atajo global Ctrl+K (se registra en Layout, no acá)
-  // Filtrado con useMemo sobre productos/trabajos
-  // Resultados agrupados → lista plana con secciones
-  // keydown: ArrowUp/ArrowDown/Enter/Escape
-  // onClick en resultado → navigate(...) → onClose()
-  return (
-    <div className="fixed inset-0 z-[70]">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative max-w-xl mx-auto mt-20 bg-white rounded-xl shadow-2xl dark:bg-slate-800">
-        <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-slate-700">
-          <Search size={18} className="text-slate-400 shrink-0" />
-          <input ref={inputRef} autoFocus value={query}
-                 onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
-                 placeholder="Buscar productos o trabajos..."
-                 className="flex-1 bg-transparent outline-none dark:text-slate-100" />
-          <kbd className="text-xs text-slate-400">ESC</kbd>
-        </div>
-        <div className="max-h-80 overflow-y-auto p-2">
-          {/* Sección Productos + Sección Trabajos */}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-**Estado del modal:** living en `Layout` (`searchOpen`). En móvil, `bottom sheet` (`items-end` como Modal) si se prefiere consistencia con el resto.
+Para soportar la navegación `?buscar=X` del buscador global:
+- `ProductosContainer` y `TrabajosContainer`: usan `useSearchParams()` (react-router v7). `query = searchParams.get('buscar')`, filtran `effectiveData` con `useMemo` y `handleSearch` escribe `setSearchParams({ buscar })`
+- `ProductosView` y `TrabajosView`: input de búsqueda local (`<Input icon={Search}>` + botón `X`) sincronizado con el `?buscar=` del URL — funciona en ambos sentidos (escribir en la página actualiza el URL, y navegar desde el buscador global pre-rellena el input y filtra la tabla)
 
 ### 2.3 Dark Mode Toggle — ✅ COMPLETO
 
@@ -1681,21 +1621,22 @@ Consideraciones de seguridad:
 - [x] Corregir spinner pegado en BatchSaveModal
 - [x] Fix panel pendientes móvil (z-index + scroll lock)
 
-### Fase 2 — Navegación + Buscador + Dark Mode
+### Fase 2 — Navegación + Buscador + Dark Mode ✅ COMPLETA
 - [x] Toggle dark mode funcional en sidebar y topbar mobile
 - [x] Refactor `PendingChangesPanel` con lucide + dark mode
 - [x] Refactor `PendingResourceSection` con lucide + dark mode
 - [x] Refactor `PendingItem` con lucide + dark mode
 - [x] Refactor `BatchSaveModal` con lucide + componentes + refreshAll
 - [x] Fix móvil: panel por encima de top bar, modales `z-[70]`
-- [ ] Sidebar `md:w-64` (hoy `w-60`) + `main md:ml-64`
-- [ ] Active state con barra `border-l-2 border-blue-400`
-- [ ] Botón `Search` en topbar mobile y sidebar
-- [ ] **Implementar `GlobalSearch.jsx` (usa `useData()`)**
-- [ ] Integrar `Ctrl+K` para abrir buscador
-- [ ] Navegación por teclado en buscador (↑↓ + Enter)
-- [ ] Links Categorías/Pedidos en sidebar (cuando existan rutas)
-- [ ] Transición suave `transition-colors duration-200` en Layout
+- [x] Sidebar `md:w-64` + `main md:ml-64`
+- [x] Active state con barra `border-l-2 border-blue-400`
+- [x] Botón `Search` en topbar mobile y sidebar
+- [x] **Implementar `GlobalSearch.jsx` (usa `useData()` + pendientes)**
+- [x] Integrar `Ctrl+K` para abrir buscador
+- [x] Navegación por teclado en buscador (↑↓ + Enter + Esc)
+- [x] Búsqueda local en `ProductosView` y `TrabajosView` sincronizada con `?buscar=`
+- [x] Links Categorías/Pedidos diferidos (se agregan cuando existan rutas, Fase 4/5)
+- [x] Transición suave `transition-colors duration-200` en Layout
 
 ### Fase 3 — Dashboard
 - [ ] Crear `StatCard.jsx` con ícono, color dinámico, dark mode
@@ -1764,8 +1705,8 @@ Consideraciones de seguridad:
 | **Tailwind scoped por Astro** | CSS centralizado en `global.css` ✅ |
 | **Dark mode solo respondía al OS** | `@custom-variant dark` con clase `.dark` ✅ |
 | **Panel pendientes atascado en móvil** | z-index por capas: topbar 50, panel 60, modales 70 ✅ |
-| **GlobalSearch — rutas de detalle inexistentes** | Decidir: navegar a `/productos?buscar=X` (recomendado) o crear `/:id` |
-| **Ctrl+K conflicto con navegador** | Prevenir default y evitar cuando hay input enfocado |
+| **GlobalSearch — rutas de detalle inexistentes** | **Resuelto:** se navega a `/productos?buscar=X` / `/trabajos?buscar=X` (Opción 2) y la tabla filtra con el query param |
+| **Ctrl+K conflicto con navegador** | `preventDefault()` al abrir el buscador (funciona incluso con input enfocado) ✅ implementado |
 
 ### Principios a mantener
 
@@ -1778,7 +1719,7 @@ Consideraciones de seguridad:
 
 ---
 
-> **Próximo paso:** Cerrar **Fase 2** → refinar Layout (2.1) e implementar **GlobalSearch** (2.2) con `Ctrl+K`. Luego Fase 3 (Dashboard). Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
+> **Próximo paso:** **Fase 2 completa ✅** (Layout, navegación, GlobalSearch con `Ctrl+K`, dark mode). Continuar con **Fase 3 (Dashboard)**: CategoryBarChart, MiniStatsGrid, ActivityFeed, QuickActions, DashboardSkeleton y el rediseño completo de DashboardView. Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
 >
 > **Documentación de referencia:**
 > - [Lucide React Icons](https://lucide.dev/icons/)

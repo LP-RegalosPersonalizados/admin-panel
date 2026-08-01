@@ -1,8 +1,9 @@
-import { Plus, Trash2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Check, X, Search } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import DataTable from '../../components/ui/DataTable';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Input from '../../components/ui/Input';
 import ProductForm from './ProductForm';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
@@ -27,6 +28,8 @@ const COLUMNS = [
 
 export default function ProductosView({
   effectiveData,
+  searchQuery,
+  onSearchChange,
   loading,
   showForm,
   editing,
@@ -64,6 +67,27 @@ export default function ProductosView({
           <Button icon={Plus} onClick={onNew}>
             Nuevo
           </Button>
+        </div>
+      </div>
+
+      <div className="mb-4 max-w-md">
+        <div className="relative">
+          <Input
+            icon={Search}
+            type="search"
+            placeholder="Buscar por nombre o categoría..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-md cursor-pointer"
+              aria-label="Limpiar búsqueda"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
