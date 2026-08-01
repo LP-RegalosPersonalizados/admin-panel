@@ -1,3 +1,6 @@
+import { Pencil, Trash2, Inbox } from 'lucide-react';
+import Button from './Button';
+
 export default function DataTable({
   columns,
   data,
@@ -10,7 +13,7 @@ export default function DataTable({
   onDeleteSelected,
   onCancelDelete,
 }) {
-  if (loading) return <p className="text-slate-500">Cargando...</p>;
+  if (loading) return <p className="text-slate-500 dark:text-slate-400">Cargando...</p>;
 
   const allIds = data.map((r) => r.id).filter(Boolean);
   const allSelected = allIds.length > 0 && selectedIds && selectedIds.size === allIds.length;
@@ -33,7 +36,7 @@ export default function DataTable({
     <div>
       {selectable && selectedIds && onSelectionChange && (
         <div className="flex items-center justify-between mb-3">
-          <label className="flex items-center gap-2 text-sm text-slate-600">
+          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <input
               type="checkbox"
               checked={allSelected}
@@ -43,23 +46,26 @@ export default function DataTable({
             {allSelected ? 'Deseleccionar todo' : `Seleccionar todo (${allIds.length})`}
           </label>
           {selectedIds.size > 0 && (
-            <div className="flex gap-2">
-              <span className="text-sm text-slate-500">{selectedIds.size} seleccionado(s)</span>
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-slate-500 dark:text-slate-400">{selectedIds.size} seleccionado(s)</span>
               {onDeleteSelected && (
-                <button
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={Trash2}
                   onClick={() => onDeleteSelected([...selectedIds])}
-                  className="px-3 py-1.5 bg-red-500 text-white border-0 rounded text-xs cursor-pointer"
                 >
                   Eliminar seleccionados
-                </button>
+                </Button>
               )}
               {onCancelDelete && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onSelectionChange(new Set())}
-                  className="px-3 py-1.5 border border-slate-300 rounded text-xs cursor-pointer"
                 >
                   Cancelar
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -67,23 +73,26 @@ export default function DataTable({
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white rounded-lg">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b-2 border-slate-200">
+            <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 border-slate-200 dark:border-slate-700">
               {selectable && <th className="p-3 w-10"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4" /></th>}
               {columns.map((col) => (
-                <th key={col.key} className="p-3 text-left font-semibold text-sm whitespace-nowrap">
+                <th key={col.key} className="p-3 text-left font-semibold text-sm whitespace-nowrap text-slate-700 dark:text-slate-300">
                   {col.label}
                 </th>
               ))}
-              <th className="p-3 text-left font-semibold text-sm whitespace-nowrap">Acciones</th>
+              <th className="p-3 text-left font-semibold text-sm whitespace-nowrap text-slate-700 dark:text-slate-300">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1 + (selectable ? 1 : 0)} className="p-5 text-center text-slate-400">
-                  No hay datos
+                <td colSpan={columns.length + 1 + (selectable ? 1 : 0)} className="p-8 text-center">
+                  <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                    <Inbox size={40} className="mb-2" />
+                    <p className="text-sm">No hay datos</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -96,11 +105,11 @@ export default function DataTable({
                 return (
                   <tr
                     key={row.id || i}
-                    className={`border-b border-slate-200 ${
-                      isPendingDelete ? 'bg-red-50 opacity-60' : ''
-                    } ${isPendingNew ? 'bg-green-50' : ''} ${
-                      isSelected ? 'bg-blue-50' : ''
-                    }`}
+                    className={`border-b border-slate-200 dark:border-slate-700 ${
+                      isPendingDelete ? 'bg-red-50 dark:bg-red-900/20 opacity-60' : ''
+                    } ${isPendingNew ? 'bg-green-50 dark:bg-green-900/20' : ''} ${
+                      isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                    } ${!isPendingDelete && !isPendingNew && !isSelected ? 'bg-white dark:bg-slate-800' : ''}`}
                   >
                     {selectable && (
                       <td className="p-3">
@@ -115,31 +124,35 @@ export default function DataTable({
                       </td>
                     )}
                     {columns.map((col) => (
-                      <td key={col.key} className="p-3 text-sm">
+                      <td key={col.key} className="p-3 text-sm text-slate-700 dark:text-slate-300">
                         <div className="flex items-center gap-2">
                           {col.render ? col.render(row[col.key], row) : row[col.key]}
-                          {isPendingNew && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">Nuevo</span>}
-                          {isPending && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">Pendiente</span>}
-                          {isPendingDelete && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">Eliminar</span>}
+                          {isPendingNew && <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-1.5 py-0.5 rounded font-medium">Nuevo</span>}
+                          {isPending && <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded font-medium">Pendiente</span>}
+                          {isPendingDelete && <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">Eliminar</span>}
                         </div>
                       </td>
                     ))}
                     <td className="p-3">
                       {!isPendingDelete && onEdit && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Pencil}
                           onClick={() => onEdit(row)}
-                          className="mr-2 px-3 py-1.5 bg-blue-500 text-white border-0 rounded text-xs cursor-pointer hover:bg-blue-600"
                         >
                           Editar
-                        </button>
+                        </Button>
                       )}
                       {onDelete && !selectable && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Trash2}
                           onClick={() => onDelete(row.id)}
-                          className="px-3 py-1.5 bg-red-500 text-white border-0 rounded text-xs cursor-pointer hover:bg-red-600"
                         >
                           Eliminar
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

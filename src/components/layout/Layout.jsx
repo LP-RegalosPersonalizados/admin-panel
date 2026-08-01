@@ -1,63 +1,111 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Package, Briefcase, Bell, LogOut, Menu, X, Moon, Sun, Search } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import PendingChangesPanel from '../../features/pending-changes/PendingChangesPanel';
+import GlobalSearch from './GlobalSearch';
+
+const navLinks = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/productos', label: 'Productos', icon: Package },
+  { to: '/trabajos', label: 'Trabajos', icon: Briefcase },
+];
+
+const navLinkClass = (active) =>
+  `flex items-center gap-3 px-4 py-2.5 mb-1 border-l-2 rounded-lg text-white no-underline transition-colors duration-150 ${
+    active
+      ? 'border-blue-400 bg-slate-700/40'
+      : 'border-transparent hover:bg-slate-800'
+  }`;
 
 export default function Layout({ children }) {
   const { email, logout } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
   const { pendingCount } = usePendingChanges();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  const links = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/productos', label: 'Productos' },
-    { to: '/trabajos', label: 'Trabajos' },
-  ];
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-800 text-white px-4 py-3 flex items-center gap-3">
-        <button onClick={() => setMobileMenuOpen(true)} className="text-xl leading-none cursor-pointer">☰</button>
-        <span className="font-semibold">Admin</span>
-        <button
-          onClick={() => setPanelOpen(true)}
-          className="ml-auto relative px-2 py-1 bg-slate-700 rounded text-xs cursor-pointer"
-        >
-          Pendientes {pendingCount > 0 && <span className="ml-1 bg-blue-400 text-white text-xs rounded-full px-1.5">{pendingCount}</span>}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 dark:bg-slate-950 text-white px-4 py-3 flex items-center gap-3">
+        <button onClick={() => setMobileMenuOpen(true)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Abrir menú">
+          <Menu size={20} />
         </button>
+        <span className="font-semibold">Admin</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => setSearchOpen(true)} className="p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Buscar">
+            <Search size={16} />
+          </button>
+          <button onClick={toggleTheme} className="p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cambiar tema">
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button onClick={() => setPanelOpen(true)} className="relative p-1.5 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cambios pendientes">
+            <Bell size={18} />
+            {pendingCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                {pendingCount > 9 ? '9+' : pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <nav className="relative w-64 bg-slate-800 text-white h-full p-5 flex flex-col">
+          <nav className="relative w-64 bg-slate-900 dark:bg-slate-950 text-white h-full p-5 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Admin</h2>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-xl leading-none cursor-pointer">✕</button>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:bg-slate-800 rounded-md cursor-pointer" aria-label="Cerrar menú">
+                <X size={20} />
+              </button>
             </div>
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 mb-1 rounded-lg text-white no-underline ${
-                  location.pathname === l.to ? 'bg-slate-600' : 'hover:bg-slate-700'
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="mt-auto pt-5 border-t border-slate-600">
+            {navLinks.map((l) => {
+              const Icon = l.icon;
+              return (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={navLinkClass(location.pathname === l.to)}
+                >
+                  <Icon size={18} />
+                  <span>{l.label}</span>
+                </Link>
+              );
+            })}
+            <button
+              onClick={() => { setSearchOpen(true); setMobileMenuOpen(false); }}
+              className="mt-1 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white no-underline border-l-2 border-transparent hover:bg-slate-800 cursor-pointer transition-colors duration-150"
+            >
+              <Search size={18} />
+              <span>Buscar</span>
+              <kbd className="ml-auto text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Ctrl K</kbd>
+            </button>
+            <div className="mt-auto pt-5 border-t border-slate-700">
               <p className="text-xs text-slate-400 truncate">{email}</p>
               <button
-                onClick={logout}
-                className="mt-2 w-full bg-red-500 text-white border-0 px-4 py-2 rounded-md cursor-pointer text-sm"
+                onClick={() => { logout(); setMobileMenuOpen(false); }}
+                className="mt-2 w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
               >
+                <LogOut size={16} />
                 Cerrar sesión
               </button>
             </div>
@@ -66,46 +114,77 @@ export default function Layout({ children }) {
       )}
 
       {/* Desktop sidebar */}
-      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-slate-800 text-white p-5 flex-col z-20">
-        <h2 className="text-lg font-semibold mb-5">Admin</h2>
-        {links.map((l) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className={`block px-4 py-2.5 mb-1 rounded-lg text-white no-underline ${
-              location.pathname === l.to ? 'bg-slate-600' : 'hover:bg-slate-700'
-            }`}
-          >
-            {l.label}
-          </Link>
-        ))}
+      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 md:w-64 bg-slate-900 dark:bg-slate-950 text-white p-5 flex-col z-20 shadow-lg">
+        <div className="mb-6 px-2">
+          <h2 className="text-lg font-bold">Admin</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Recuerdos Compartidos</p>
+        </div>
+        {navLinks.map((l) => {
+          const Icon = l.icon;
+          return (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={navLinkClass(location.pathname === l.to)}
+            >
+              <Icon size={18} />
+              <span>{l.label}</span>
+            </Link>
+          );
+        })}
+
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="mt-1 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white no-underline border-l-2 border-transparent hover:bg-slate-800 cursor-pointer transition-colors duration-150"
+        >
+          <Search size={18} />
+          <span>Buscar</span>
+          <kbd className="ml-auto text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">Ctrl K</kbd>
+        </button>
+
         <button
           onClick={() => setPanelOpen(true)}
-          className="mt-3 w-full px-4 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm text-left cursor-pointer flex items-center justify-between"
+          className="mt-3 w-full flex items-center justify-between px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm cursor-pointer"
         >
-          <span>📋 Pendientes</span>
+          <span className="flex items-center gap-2">
+            <Bell size={16} />
+            Pendientes
+          </span>
           {pendingCount > 0 && (
-            <span className="bg-blue-400 text-white text-xs font-bold rounded-full px-2 py-0.5">{pendingCount}</span>
+            <span className="bg-blue-500 text-white text-xs font-bold rounded-full px-2 py-0.5">{pendingCount}</span>
           )}
         </button>
-        <div className="mt-auto pt-5 border-t border-slate-600">
-          <p className="text-xs text-slate-400 truncate">{email}</p>
+
+        <button
+          onClick={toggleTheme}
+          className="mt-2 w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-sm cursor-pointer"
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          <span>{isDark ? 'Modo claro' : 'Modo oscuro'}</span>
+        </button>
+
+        <div className="mt-auto pt-5 border-t border-slate-700">
+          <p className="text-xs text-slate-400 truncate px-2">{email}</p>
           <button
             onClick={logout}
-            className="mt-2 w-full bg-red-500 text-white border-0 px-4 py-2 rounded-md cursor-pointer text-sm hover:bg-red-600"
+            className="mt-2 w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm cursor-pointer"
           >
+            <LogOut size={16} />
             Cerrar sesión
           </button>
         </div>
       </nav>
 
       {/* Main content */}
-      <main className="px-4 py-4 pt-14 md:ml-60 md:px-8 md:py-8 md:pt-0">
+      <main className="px-4 py-4 pt-14 md:ml-64 md:px-8 md:py-8 md:pt-0">
         {children}
       </main>
 
       {/* Pending changes panel */}
       <PendingChangesPanel isOpen={panelOpen} onClose={() => setPanelOpen(false)} />
+
+      {/* Global search */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
