@@ -62,7 +62,7 @@ export default function TrabajosView({
         <div className="relative">
           <Input
             icon={Search}
-            type="search"
+            type="text"
             placeholder="Buscar por título o categoría..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}

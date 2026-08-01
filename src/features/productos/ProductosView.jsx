@@ -74,7 +74,7 @@ export default function ProductosView({
         <div className="relative">
           <Input
             icon={Search}
-            type="search"
+            type="text"
             placeholder="Buscar por nombre o categoría..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
