@@ -11,6 +11,7 @@ export default function CategoryBarChart({ data, color = 'blue', emptyLabel = 'S
   }
 
   const max = Math.max(...data.map((d) => d.count));
+  const total = data.reduce((sum, d) => sum + d.count, 0);
   const barColor =
     color === 'amber'
       ? 'bg-amber-500 dark:bg-amber-400'
@@ -26,7 +27,7 @@ export default function CategoryBarChart({ data, color = 'blue', emptyLabel = 'S
             <span className="font-medium capitalize text-slate-700 dark:text-slate-300">{item.name}</span>
             <span className="text-slate-500 dark:text-slate-400">
               {item.count} {item.count === 1 ? 'item' : 'items'}
-              {max > 1 ? ` (${Math.round((item.count / max) * 100)}%)` : ''}
+              {total > 0 ? ` (${Math.round((item.count / total) * 100)}%)` : ''}
             </span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2.5 dark:bg-slate-700" role="presentation">

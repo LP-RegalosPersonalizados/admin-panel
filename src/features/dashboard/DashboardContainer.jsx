@@ -7,13 +7,12 @@ import DashboardView from './DashboardView';
 import {
   getCategoryCount,
   getCategoryDist,
-  getFeaturedStats,
   getPriceStats,
   getAudienceStats,
-  getTotalQuantity,
   getPriceHistogram,
   getTopExpensive,
   getRecentAdded,
+  getFeaturedProducts,
   buildActivityFeed,
 } from './stats';
 
@@ -39,14 +38,13 @@ export default function DashboardContainer() {
       categoryCount: getCategoryCount(effectiveProductos),
       categoryDist: getCategoryDist(effectiveProductos, PRODUCT_CATEGORIES),
       trabajosByCat: getCategoryDist(effectiveTrabajos, TRABAJO_CATEGORIES),
-      featuredStats: getFeaturedStats(effectiveProductos),
       priceStats: getPriceStats(effectiveProductos),
       audienceStats: getAudienceStats(effectiveProductos),
-      totalQuantity: getTotalQuantity(effectiveTrabajos),
       priceHistogram: getPriceHistogram(effectiveProductos),
       topExpensive: getTopExpensive(effectiveProductos, 5),
       recentProductos: getRecentAdded(effectiveProductos, 5),
       recentTrabajos: getRecentAdded(effectiveTrabajos, 5),
+      featuredProducts: getFeaturedProducts(effectiveProductos),
     }),
     [effectiveProductos, effectiveTrabajos]
   );
@@ -61,6 +59,7 @@ export default function DashboardContainer() {
       loading={loading}
       productosPending={pCounts.total}
       trabajosPending={tCounts.total}
+      featuredTotal={stats.productosCount}
       activityLog={activityLog}
       pendingCount={pendingCount}
       {...stats}

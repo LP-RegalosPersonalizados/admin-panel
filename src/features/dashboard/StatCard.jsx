@@ -1,5 +1,6 @@
 import { Package, Briefcase, Tags, Hash, ShoppingCart, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Badge from '../../components/ui/Badge';
 
 const ICON_MAP = { Package, Briefcase, Tags, Hash, ShoppingCart };
 
@@ -10,32 +11,31 @@ const COLOR_MAP = {
   purple: { bg: 'bg-purple-50 dark:bg-purple-900/30', icon: 'text-purple-600 dark:text-purple-400', value: 'text-purple-600 dark:text-purple-400' },
 };
 
-function StatCardContent({ iconName, title, value, pending, color }) {
+function StatCardContent({ iconName, title, value, pending, color, showArrow }) {
   const Icon = ICON_MAP[iconName];
   const colors = COLOR_MAP[color];
 
   return (
-    <>
-      <div className="flex items-center gap-2 mb-3">
-        <div className={`p-2 rounded-lg ${colors.bg}`}>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`p-2 rounded-lg shrink-0 ${colors.bg}`}>
           {Icon && <Icon size={18} className={colors.icon} />}
         </div>
-        <h3 className="text-sm text-slate-500 dark:text-slate-400">{title}</h3>
+        <div className="min-w-0">
+          <h3 className="text-xs text-slate-500 dark:text-slate-400 truncate">{title}</h3>
+          <p className={`text-2xl font-bold leading-tight ${colors.value}`}>{value}</p>
+        </div>
       </div>
-      <div className="flex items-baseline gap-3">
-        <p className={`text-4xl font-bold ${colors.value}`}>{value}</p>
-        {pending > 0 && (
-          <span className="text-sm bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-2 py-1 rounded font-medium">
-            {pending} pendiente(s)
-          </span>
-        )}
+      <div className="flex items-center gap-2 shrink-0">
+        {pending > 0 && <Badge variant="warning">{pending} pendiente(s)</Badge>}
+        {showArrow && <ArrowUpRight size={16} className="text-slate-300 dark:text-slate-600" />}
       </div>
-    </>
+    </div>
   );
 }
 
 export default function StatCard({ iconName, title, value, pending, color = 'blue', to }) {
-  const cardClass = 'bg-white rounded-lg shadow-sm p-6 dark:bg-slate-800 dark:border dark:border-slate-700';
+  const cardClass = 'bg-white rounded-lg shadow-sm p-4 dark:bg-slate-800 dark:border dark:border-slate-700';
 
   if (to) {
     return (
@@ -43,10 +43,7 @@ export default function StatCard({ iconName, title, value, pending, color = 'blu
         to={to}
         className={`${cardClass} block no-underline transition-all duration-150 hover:shadow-md hover:ring-2 hover:ring-blue-200 dark:hover:ring-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
-        <div className="relative">
-          <StatCardContent iconName={iconName} title={title} value={value} pending={pending} color={color} />
-          <ArrowUpRight size={16} className="absolute top-0 right-0 text-slate-300 dark:text-slate-600" />
-        </div>
+        <StatCardContent iconName={iconName} title={title} value={value} pending={pending} color={color} showArrow />
       </Link>
     );
   }

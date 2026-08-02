@@ -14,18 +14,21 @@ export function getCategoryCount(data) {
 }
 
 export function getCategoryDist(data, categories) {
-  if (!data.length || !categories?.length) return [];
-  return categories
-    .map((cat) => ({ name: cat, count: data.filter((p) => p.category === cat).length }))
-    .filter((c) => c.count > 0)
+  const known = new Set(categories || []);
+  const map = new Map();
+  for (const item of data) {
+    const key = item.category && known.has(item.category) ? item.category : 'Otros';
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 }
 
-export function getFeaturedStats(data) {
-  return {
-    featured: data.filter((p) => p.featured).length,
-    notFeatured: data.length - data.filter((p) => p.featured).length,
-  };
+export function getFeaturedProducts(data) {
+  return data
+    .filter((p) => p.featured)
+    .map((p) => ({ id: p.id, name: p.name, category: p.category, price: p.price, image: p.image }));
 }
 
 export function getPriceStats(data) {
@@ -45,10 +48,6 @@ export function getAudienceStats(data) {
     general: data.filter((p) => p.audience?.general?.available).length,
     business: data.filter((p) => p.audience?.business?.available).length,
   };
-}
-
-export function getTotalQuantity(data) {
-  return data.reduce((sum, t) => sum + (Number(t.quantity) || 0), 0);
 }
 
 export function getPriceHistogram(data, buckets = PRICE_BUCKETS) {

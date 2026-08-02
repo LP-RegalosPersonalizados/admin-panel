@@ -1,19 +1,9 @@
-import { Star, DollarSign, Users } from 'lucide-react';
+import { DollarSign, Users } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import { formatCurrency } from './format';
 
-export default function MiniStatsGrid({ featuredStats, priceStats, audienceStats }) {
+export default function MiniStatsGrid({ priceStats, audienceStats }) {
   const sections = [
-    {
-      icon: Star,
-      title: 'Destacados',
-      color: 'text-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-900/30',
-      items: [
-        { label: 'Destacados', value: featuredStats?.featured ?? 0, color: 'text-emerald-600 dark:text-emerald-400' },
-        { label: 'Normales', value: featuredStats?.notFeatured ?? 0, color: 'text-slate-500 dark:text-slate-400' },
-      ],
-    },
     {
       icon: DollarSign,
       title: 'Precios (Bs)',
@@ -40,7 +30,7 @@ export default function MiniStatsGrid({ featuredStats, priceStats, audienceStats
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
       {sections.map((section) => (
         <Card key={section.title} title={section.title} icon={section.icon} iconClassName={section.color} className="h-full">
           <div className="space-y-2">

@@ -5,8 +5,8 @@ export default function DashboardSkeleton() {
     <Layout>
       <div className="animate-pulse">
         <div className="h-8 bg-slate-200 rounded w-48 mb-6 dark:bg-slate-700" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg p-6 dark:bg-slate-800 dark:border dark:border-slate-700">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-9 h-9 bg-slate-200 rounded-lg dark:bg-slate-700" />

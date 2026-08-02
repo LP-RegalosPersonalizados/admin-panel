@@ -25,11 +25,13 @@ export default function Button({
   type = 'button',
   children,
   className = '',
+  ...rest
 }) {
   const base = 'inline-flex items-center justify-center font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none';
 
   return (
     <button
+      {...rest}
       type={type}
       onClick={onClick}
       disabled={disabled || loading}

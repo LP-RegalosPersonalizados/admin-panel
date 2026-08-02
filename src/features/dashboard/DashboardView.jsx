@@ -10,6 +10,7 @@ import QuickActions from './QuickActions';
 import PriceHistogram from './PriceHistogram';
 import TopExpensive from './TopExpensive';
 import RecentAdded from './RecentAdded';
+import FeaturedProducts from './FeaturedProducts';
 import DashboardSkeleton from './DashboardSkeleton';
 
 export default function DashboardView({
@@ -17,18 +18,18 @@ export default function DashboardView({
   productosCount,
   trabajosCount,
   categoryCount,
-  totalQuantity,
   productosPending,
   trabajosPending,
   categoryDist,
   trabajosByCat,
-  featuredStats,
   priceStats,
   audienceStats,
   priceHistogram,
   topExpensive,
   recentProductos,
   recentTrabajos,
+  featuredProducts,
+  featuredTotal,
   activityLog,
 }) {
   const navigate = useNavigate();
@@ -47,32 +48,36 @@ export default function DashboardView({
             <p className="text-xs text-slate-500 dark:text-slate-400">Resumen general del catálogo</p>
           </div>
         </div>
+      </div>
+
+      {/* Row 1: Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <StatCard to="/productos" iconName="Package" title="Productos" value={productosCount} pending={productosPending} color="blue" />
+        <StatCard to="/trabajos" iconName="Briefcase" title="Trabajos" value={trabajosCount} pending={trabajosPending} color="amber" />
+        <StatCard to="/productos" iconName="Tags" title="Categorías" value={categoryCount} color="emerald" />
+      </div>
+
+      {/* Quick actions */}
+      <div className="flex justify-end mb-6">
         <QuickActions
           onNewProducto={() => navigate('/productos?nuevo=1')}
           onNewTrabajo={() => navigate('/trabajos?nuevo=1')}
         />
       </div>
 
-      {/* Row 1: Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard to="/productos" iconName="Package" title="Productos" value={productosCount} pending={productosPending} color="blue" />
-        <StatCard to="/trabajos" iconName="Briefcase" title="Trabajos" value={trabajosCount} pending={trabajosPending} color="amber" />
-        <StatCard to="/productos" iconName="Tags" title="Categorías" value={categoryCount} color="emerald" />
-        <StatCard to="/trabajos" iconName="Hash" title="Total Cantidad" value={totalQuantity} color="purple" />
-      </div>
-
-      {/* Row 2: Category bar charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      {/* Row 2: Category bar charts + Featured carousel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <Card title="Productos por Categoría" icon={Package} iconClassName="text-blue-500 dark:text-blue-400" className="h-full">
           <CategoryBarChart data={categoryDist} color="blue" emptyLabel="Sin productos por categoría" />
         </Card>
         <Card title="Trabajos por Categoría" icon={Briefcase} iconClassName="text-amber-500 dark:text-amber-400" className="h-full">
           <CategoryBarChart data={trabajosByCat} color="amber" emptyLabel="Sin trabajos por categoría" />
         </Card>
+        <FeaturedProducts items={featuredProducts} total={featuredTotal} />
       </div>
 
       {/* Row 3: Mini stats */}
-      <MiniStatsGrid featuredStats={featuredStats} priceStats={priceStats} audienceStats={audienceStats} />
+      <MiniStatsGrid priceStats={priceStats} audienceStats={audienceStats} />
 
       {/* Row 4: Extra insights */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
