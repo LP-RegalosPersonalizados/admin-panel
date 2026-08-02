@@ -1,16 +1,88 @@
+import { useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, Briefcase } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
+import Card from '../../components/ui/Card';
 import StatCard from './StatCard';
+import CategoryBarChart from './CategoryBarChart';
+import MiniStatsGrid from './MiniStatsGrid';
+import ActivityFeed from './ActivityFeed';
+import QuickActions from './QuickActions';
+import PriceHistogram from './PriceHistogram';
+import TopExpensive from './TopExpensive';
+import RecentAdded from './RecentAdded';
+import DashboardSkeleton from './DashboardSkeleton';
 
-export default function DashboardView({ loading, productosCount, trabajosCount, categoryCount, productosPending, trabajosPending }) {
-  if (loading) return <Layout><p className="text-slate-500 dark:text-slate-400">Cargando...</p></Layout>;
+export default function DashboardView({
+  loading,
+  productosCount,
+  trabajosCount,
+  categoryCount,
+  totalQuantity,
+  productosPending,
+  trabajosPending,
+  categoryDist,
+  trabajosByCat,
+  featuredStats,
+  priceStats,
+  audienceStats,
+  priceHistogram,
+  topExpensive,
+  recentProductos,
+  recentTrabajos,
+  activityLog,
+}) {
+  const navigate = useNavigate();
+  if (loading) return <DashboardSkeleton />;
+
   return (
     <Layout>
-      <h1 className="text-xl md:text-2xl font-bold mb-6 dark:text-white">Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-        <StatCard iconName="Package" title="Productos" value={productosCount} pending={productosPending} color="blue" />
-        <StatCard iconName="Briefcase" title="Trabajos" value={trabajosCount} pending={trabajosPending} color="amber" />
-        <StatCard iconName="Tags" title="Categorías" value={categoryCount} color="emerald" />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
+            <LayoutDashboard size={22} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Resumen general del catálogo</p>
+          </div>
+        </div>
+        <QuickActions
+          onNewProducto={() => navigate('/productos?nuevo=1')}
+          onNewTrabajo={() => navigate('/trabajos?nuevo=1')}
+        />
       </div>
+
+      {/* Row 1: Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard to="/productos" iconName="Package" title="Productos" value={productosCount} pending={productosPending} color="blue" />
+        <StatCard to="/trabajos" iconName="Briefcase" title="Trabajos" value={trabajosCount} pending={trabajosPending} color="amber" />
+        <StatCard to="/productos" iconName="Tags" title="Categorías" value={categoryCount} color="emerald" />
+        <StatCard to="/trabajos" iconName="Hash" title="Total Cantidad" value={totalQuantity} color="purple" />
+      </div>
+
+      {/* Row 2: Category bar charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <Card title="Productos por Categoría" icon={Package} iconClassName="text-blue-500 dark:text-blue-400" className="h-full">
+          <CategoryBarChart data={categoryDist} color="blue" emptyLabel="Sin productos por categoría" />
+        </Card>
+        <Card title="Trabajos por Categoría" icon={Briefcase} iconClassName="text-amber-500 dark:text-amber-400" className="h-full">
+          <CategoryBarChart data={trabajosByCat} color="amber" emptyLabel="Sin trabajos por categoría" />
+        </Card>
+      </div>
+
+      {/* Row 3: Mini stats */}
+      <MiniStatsGrid featuredStats={featuredStats} priceStats={priceStats} audienceStats={audienceStats} />
+
+      {/* Row 4: Extra insights */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+        <PriceHistogram data={priceHistogram} />
+        <TopExpensive items={topExpensive} />
+        <RecentAdded productos={recentProductos} trabajos={recentTrabajos} />
+      </div>
+
+      {/* Row 5: Activity feed */}
+      <ActivityFeed entries={activityLog} />
     </Layout>
   );
 }

@@ -1,4 +1,5 @@
-import { Package, Briefcase, Tags, Hash, ShoppingCart } from 'lucide-react';
+import { Package, Briefcase, Tags, Hash, ShoppingCart, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ICON_MAP = { Package, Briefcase, Tags, Hash, ShoppingCart };
 
@@ -9,12 +10,12 @@ const COLOR_MAP = {
   purple: { bg: 'bg-purple-50 dark:bg-purple-900/30', icon: 'text-purple-600 dark:text-purple-400', value: 'text-purple-600 dark:text-purple-400' },
 };
 
-export default function StatCard({ iconName, title, value, pending, color = 'blue' }) {
+function StatCardContent({ iconName, title, value, pending, color }) {
   const Icon = ICON_MAP[iconName];
   const colors = COLOR_MAP[color];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 dark:bg-slate-800 dark:border dark:border-slate-700">
+    <>
       <div className="flex items-center gap-2 mb-3">
         <div className={`p-2 rounded-lg ${colors.bg}`}>
           {Icon && <Icon size={18} className={colors.icon} />}
@@ -29,6 +30,30 @@ export default function StatCard({ iconName, title, value, pending, color = 'blu
           </span>
         )}
       </div>
+    </>
+  );
+}
+
+export default function StatCard({ iconName, title, value, pending, color = 'blue', to }) {
+  const cardClass = 'bg-white rounded-lg shadow-sm p-6 dark:bg-slate-800 dark:border dark:border-slate-700';
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={`${cardClass} block no-underline transition-all duration-150 hover:shadow-md hover:ring-2 hover:ring-blue-200 dark:hover:ring-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+      >
+        <div className="relative">
+          <StatCardContent iconName={iconName} title={title} value={value} pending={pending} color={color} />
+          <ArrowUpRight size={16} className="absolute top-0 right-0 text-slate-300 dark:text-slate-600" />
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <div className={cardClass}>
+      <StatCardContent iconName={iconName} title={title} value={value} pending={pending} color={color} />
     </div>
   );
 }

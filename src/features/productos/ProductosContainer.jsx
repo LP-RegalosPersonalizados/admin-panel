@@ -21,6 +21,17 @@ export default function ProductosContainer() {
 
   useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
 
+  useEffect(() => {
+    if (searchParams.get('nuevo') === '1') {
+      setEditing(null);
+      setShowForm(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('nuevo');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const effectiveData = getEffectiveList('productos', productos);
 
   const filteredData = useMemo(() => {

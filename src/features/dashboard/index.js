@@ -1,3 +1,13 @@
 export { default as DashboardContainer } from './DashboardContainer';
 export { default as DashboardView } from './DashboardView';
 export { default as StatCard } from './StatCard';
+export { default as CategoryBarChart } from './CategoryBarChart';
+export { default as PriceHistogram } from './PriceHistogram';
+export { default as TopExpensive } from './TopExpensive';
+export { default as RecentAdded } from './RecentAdded';
+export { default as MiniStatsGrid } from './MiniStatsGrid';
+export { default as ActivityFeed } from './ActivityFeed';
+export { default as QuickActions } from './QuickActions';
+export { default as DashboardSkeleton } from './DashboardSkeleton';
+export * from './stats';
+export * from './format';
