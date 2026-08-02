@@ -25,13 +25,13 @@
 
 ## 📊 Estado del Proyecto
 
-> Última actualización: **2026-08-01**
+> Última actualización: **2026-08-02**
 
 | Fase | Estado | Detalle |
 |---|---|---|
 | **1 — Infraestructura Base** | ✅ **100%** | DataContext, ThemeContext, activityLog, UI kit, refactor completo, correcciones de estilos |
 | **2 — Layout + Buscador + Dark Mode** | ✅ **100%** | Dark Mode · PendingChangesPanel · Layout `md:w-64` + active `border-l-2` · GlobalSearch con `Ctrl+K` · búsqueda local en listas con `?buscar=` |
-| **3 — Dashboard con Reportes** | 🔴 **~20%** | Solo StatCard rediseñado. Resto pendiente (charts, feed, skeleton) |
+| **3 — Dashboard con Reportes** | ✅ **100%** | stats.js (funciones puras), gráficos CSS, carousel de destacados, skeleton, feed, StatCards compactas clicables, `?nuevo=1` |
 | **4 — Gestión de Categorías** | ⚪ Sin empezar | Bloqueado por API `/api/categorias` (fallback localStorage disponible) |
 | **5 — Gestión de Pedidos** | ⚪ Sin empezar | **Bloqueado** por API `/api/pedidos` (PII — no usar mock) |
 | **6 — Exportar + Utilidades** | ⚪ Sin empezar | Independiente |
@@ -227,10 +227,12 @@ La actividad reciente se guarda en `localStorage` cuando el usuario hace cambios
 6. useMemo en DashboardContainer se gatilla:
    ├─ categoryDist     → filter + reduce sobre productos[]
    ├─ trabajosByCat    → filter + reduce sobre trabajos[]
-   ├─ featuredStats    → filter sobre productos[].featured
+   ├─ featuredProducts → filter sobre productos[].featured (carousel)
    ├─ priceStats       → map + Math sobre productos[].price
    ├─ audienceStats    → filter sobre productos[].audience
-   ├─ totalQuantity    → reduce sobre trabajos[].quantity
+   ├─ priceHistogram   → buckets de rangos de precio
+   ├─ topExpensive     → top 5 productos más caros
+   ├─ recentProductos / recentTrabajos → orden por createdAt
    └─ activityLog      → localStorage getItem + pending changes
    ↓
 7. DashboardView renderiza con todos los datos
@@ -774,7 +776,9 @@ Para soportar la navegación `?buscar=X` del buscador global:
 
 ## Fase 3: Dashboard con Reportes y Estadísticas
 
+> **✅ COMPLETA (2026-08-02)** — Todos los puntos 3.1–3.11 implementados + mejoras adicionales, verificados con `npm run build`.
 > **Cero llamadas API adicionales.** Todo se computa desde `DataContext` (Fase 1).
+> **Nota:** los snippets 3.3–3.10 documentan el plan original; el código real incorpora las mejoras listadas en la sección **3.12**.
 
 ### 3.1 Arquitectura de Datos
 
@@ -784,28 +788,37 @@ DataContext (compartido, cargado en Fase 1)
   ├── trabajos[]  ← GET /api/trabajos  (ya cargado)
   │
   └── DashboardContainer
-        ├── useMemo → categoryDist        (filter + reduce sobre productos[])
-        ├── useMemo → trabajosByCat       (filter + reduce sobre trabajos[])
-        ├── useMemo → featuredStats       (filter sobre productos[].featured)
-        ├── useMemo → priceStats          (map + reduce sobre productos[].price)
-        ├── useMemo → audienceStats       (filter sobre productos[].audience)
-        ├── useMemo → totalQuantity       (reduce sobre trabajos[].quantity)
-        └── useMemo → activityLog         (localStorage + PendingChangesContext)
+        ├── getEffectiveList('productos'/'trabajos') → stats incluyen offline pendientes
+        ├── useMemo → stats (stats.js, funciones puras):
+        │     ├── categoryDist / trabajosByCat   → getCategoryDist (agrupa 'Otros')
+        │     ├── featuredProducts               → getFeaturedProducts (carousel)
+        │     ├── priceStats                     → getPriceStats (avg/max/min)
+        │     ├── audienceStats                  → getAudienceStats
+        │     ├── priceHistogram                 → getPriceHistogram (buckets)
+        │     ├── topExpensive                   → getTopExpensive (top 5)
+        │     ├── recentProductos/recentTrabajos → getRecentAdded (por createdAt)
+        │     └── activityLog                    → buildActivityFeed (localStorage + pending)
 ```
 
 ### 3.2 Estructura de Archivos
 
 ```
 src/features/dashboard/
-├── DashboardContainer.jsx    ← Lógica: consume DataContext + computa stats
-├── DashboardView.jsx         ← UI: layout grid + composición de subcomponentes
-├── StatCard.jsx              ← Card individual con ícono + valor + pendientes
-├── CategoryBarChart.jsx      ← Gráfico de barras horizontal (CSS puro)
-├── MiniStatsGrid.jsx         ← Grid de mini estadísticas (precios, featured, audiencia)
-├── ActivityFeed.jsx          ← Lista de actividad reciente desde localStorage
-├── QuickActions.jsx          ← Botones de "Nuevo Producto" / "Nuevo Trabajo"
-├── DashboardSkeleton.jsx     ← Skeleton de carga (reemplaza "Cargando...")
-└── index.js                  ← Re-exportaciones
+├── stats.js                 ← Funciones puras de cómputo (testables, sin side-effects)
+├── format.js                ← timeAgo() + formatCurrency() (Intl es-VE)
+├── DashboardContainer.jsx   ← Lógica: DataContext + getEffectiveList + stats.js
+├── DashboardView.jsx        ← UI: layout grid + composición de subcomponentes
+├── StatCard.jsx             ← Card compacta horizontal, clicable (prop `to`)
+├── CategoryBarChart.jsx     ← Barras horizontales CSS con % real sobre el total
+├── FeaturedProducts.jsx     ← Card grande con mini carousel de destacados
+├── PriceHistogram.jsx       ← Barras por rangos de precio (buckets)
+├── TopExpensive.jsx         ← Top 5 productos más caros
+├── RecentAdded.jsx          ← Últimos productos/trabajos agregados (createdAt)
+├── MiniStatsGrid.jsx        ← Grid mini (Precios + Audiencia)
+├── ActivityFeed.jsx         ← Actividad reciente (localStorage + pendientes)
+├── QuickActions.jsx         ← Botones "Nuevo Producto" / "Nuevo Trabajo"
+├── DashboardSkeleton.jsx    ← Skeleton de carga (reemplaza "Cargando...")
+└── index.js                 ← Re-exportaciones
 ```
 
 ### 3.3 DashboardContainer — Lógica
@@ -1231,12 +1244,34 @@ export default function QuickActions({ onNewProducto, onNewTrabajo }) {
 
 | Componente | Loading | Normal | Vacío | Error | Edge Cases |
 |---|---|---|---|---|---|
-| **StatCard** | DashboardSkeleton | Valor + badge | Muestra "0" | N/A | pending badge solo si > 0 |
-| **CategoryBarChart** | No render (View espera) | Barras con colores | `Inbox` + "Sin datos" | N/A | max=0 → división segura |
-| **MiniStatsGrid** | No render | Grid 3 columnas | Featured/Audiencia 0; Precios: fallback | N/A | priceStats puede ser null |
+| **StatCard** | DashboardSkeleton | Valor + badge | Muestra "0" | N/A | pending badge solo si > 0; clicable si `to` |
+| **CategoryBarChart** | No render (View espera) | Barras con colores | `Inbox` + "Sin datos" | N/A | max=0 → división segura; % real sobre total |
+| **FeaturedProducts** | No render | Mini carousel (img, nombre, cat, precio) | `Inbox` + "Sin destacados" | N/A | sin imagen/fallo → placeholder; auto-play se pausa al hover |
+| **PriceHistogram** | No render | Barras por rangos de precio | `Inbox` + "Sin precios" | N/A | sin precios → buckets vacíos |
+| **TopExpensive** | No render | Ranking top 5 con precio | `Inbox` + "Sin productos con precio" | N/A | sin precio válido → excluido |
+| **RecentAdded** | No render | Lista ordenada por createdAt | `Inbox` + "Sin registros con fecha" | N/A | items sin createdAt → excluidos |
+| **MiniStatsGrid** | No render | Grid 2 columnas (Precios, Audiencia) | Audiencia 0; Precios: fallback | N/A | priceStats puede ser null |
 | **ActivityFeed** | No render | Lista timestamps | `Inbox` + "Sin actividad" | N/A | entries vacío → empty state |
 | **DashboardView** | DashboardSkeleton | Layout completo | Stats en 0 | DashboardSkeleton | Combina loading del DataContext |
 | **DataContext** | `loading=true` | `productos[]` + `trabajos[]` | Arrays vacíos | Error silencioso | `?? []` para downstream |
+
+### 3.12 Mejoras implementadas (fuera del plan original)
+
+Durante la implementación se aplicaron mejoras y correcciones no previstas en el checklist original:
+
+1. **Lógica extraída a `stats.js`** — Funciones puras y testables (`getCategoryDist`, `getPriceStats`, `getPriceHistogram`, `buildActivityFeed`, etc.). El Container solo compone `useMemo`.
+2. **Stats con cambios pendientes offline** — `DashboardContainer` usa `getEffectiveList()` en vez de los arrays crudos, por lo que los counts reflejan creates/updates/deletes sin guardar (coherente con el offline-first). Los items marcados para eliminar se filtran (`!__pendingDelete`).
+3. **% real en `CategoryBarChart`** — Bug corregido: el % se calculaba relativo a la categoría con más items (`count/max`) en vez del total. Ahora muestra el peso real sobre el total (`count/total`); la barra sigue escalada al máximo para lectura visual.
+4. **Agrupación "Otros"** — `getCategoryDist` agrupa en "Otros" cualquier categoría fuera de las constantes (o vacía), de modo que los pesos siempre suman 100%.
+5. **Card grande de Destacados (`FeaturedProducts`)** — Mini carousel con imagen, nombre, categoría y precio; flechas + dots, auto-play 4s con pausa al hover, badge "X de Y" en el header.
+6. **Layout reorganizado** — Fila de gráficos a 3 columnas (Productos por Categoría, Trabajos por Categoría, Destacados). `MiniStatsGrid` pasa a 2 cards (Precios + Audiencia).
+7. **StatCards compactas y clicables** — Rediseño horizontal (`p-4`, valor `text-2xl`) que ocupa ~40% de la altura original; navegan a su sección vía `to` (Link). Se eliminó la card "Total Cantidad" (sin datos reales).
+8. **QuickActions reubicados** — Los botones "Nuevo Producto"/"Nuevo Trabajo" se movieron a una fila propia debajo de las StatCards (header solo con título). Labels siempre visibles + `aria-label`.
+9. **`?nuevo=1`** — `ProductosContainer` y `TrabajosContainer` abren el formulario automáticamente al recibir el query param (limpian el param tras abrir).
+10. **`Button.jsx` spread `...rest`** — Acepta `aria-label`, `title`, etc. (mejora compatible con todo el proyecto).
+11. **`Card.jsx` prop `iconClassName`** — Permite colorear el ícono del header (compatible hacia atrás, default `text-slate-500`).
+12. **`format.js`** — `timeAgo()` y `formatCurrency()` (Intl `es-VE`) reutilizados por ActivityFeed, RecentAdded, TopExpensive y MiniStatsGrid.
+13. **Código muerto eliminado** — `getFeaturedStats` y `getTotalQuantity` removidos tras el rediseño (se limpiaron imports y re-exports).
 
 ---
 
@@ -1639,15 +1674,21 @@ Consideraciones de seguridad:
 - [x] Links Categorías/Pedidos diferidos (se agregan cuando existan rutas, Fase 4/5)
 - [x] Transición suave `transition-colors duration-200` en Layout
 
-### Fase 3 — Dashboard
-- [ ] Crear `StatCard.jsx` con ícono, color dinámico, dark mode
-- [ ] Crear `CategoryBarChart.jsx` (barras CSS)
-- [ ] Crear `MiniStatsGrid.jsx` (featured, precios, audiencia)
-- [ ] Crear `ActivityFeed.jsx` (localStorage + pending changes)
-- [ ] Crear `QuickActions.jsx`
-- [ ] Crear `DashboardSkeleton.jsx`
-- [ ] Rediseñar `DashboardView.jsx` (4 filas completo)
-- [ ] **Verificar: cero llamadas API — todo desde DataContext**
+### Fase 3 — Dashboard ✅ COMPLETA
+- [x] Crear `StatCard.jsx` con ícono, color dinámico, dark mode (compacta + clicable)
+- [x] Crear `CategoryBarChart.jsx` (barras CSS) con **% real sobre el total**
+- [x] Crear `MiniStatsGrid.jsx` (precios, audiencia — Destacados movido a card grande)
+- [x] Crear `ActivityFeed.jsx` (localStorage + pending changes)
+- [x] Crear `QuickActions.jsx` (reubicado debajo de StatCards, `?nuevo=1`)
+- [x] Crear `DashboardSkeleton.jsx`
+- [x] Rediseñar `DashboardView.jsx` (5 filas: stats, gráficos, mini, insights, feed)
+- [x] **Verificar: cero llamadas API — todo desde DataContext**
+- [x] **Extra:** `stats.js` funciones puras + `format.js`
+- [x] **Extra:** `FeaturedProducts.jsx` mini carousel de destacados
+- [x] **Extra:** `PriceHistogram.jsx`, `TopExpensive.jsx`, `RecentAdded.jsx`
+- [x] **Extra:** Card de "Total Cantidad" eliminada (sin datos reales)
+- [x] **Extra:** `?nuevo=1` abre formulario directo desde el dashboard
+- [x] **Extra:** `Button.jsx` spread `...rest` + `Card.jsx` prop `iconClassName`
 
 ### Fase 4 — Categorías
 - [ ] Crear `src/lib/categorias.js`
@@ -1720,7 +1761,7 @@ Consideraciones de seguridad:
 
 ---
 
-> **Próximo paso:** **Fase 2 completa ✅** (Layout, navegación, GlobalSearch con `Ctrl+K`, dark mode; fix de doble X en buscadores aplicado). Continuar con **Fase 3 (Dashboard)**: CategoryBarChart, MiniStatsGrid, ActivityFeed, QuickActions, DashboardSkeleton y el rediseño completo de DashboardView. Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
+> **Próximo paso:** **Fase 3 completa ✅** (Dashboard con reportes y estadísticas: stats puras, gráficos CSS con % real, carousel de destacados, skeleton, feed de actividad, StatCards compactas clicables). Continuar con **Fase 4 (Gestión de Categorías)**: requiere API `/api/categorias` (fallback localStorage disponible) — ver sección de Roadmap de Backend. Ejecutar `npm run build` después de cada cambio para verificar que no hay errores de compilación.
 >
 > **Documentación de referencia:**
 > - [Lucide React Icons](https://lucide.dev/icons/)
