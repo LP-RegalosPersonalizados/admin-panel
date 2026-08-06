@@ -1,13 +1,20 @@
-import { useState } from 'react';
-import { Image, DollarSign, Star, Hash, FileText } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Image, DollarSign, Star, Hash } from 'lucide-react';
 import { stripMeta } from '../../utils/stripMeta';
-import { PRODUCT_CATEGORIES } from '../../utils/constants';
+import { slugify } from '../../utils/slugify';
+import { getCategoryOptions } from '../../utils/categories';
+import { useData } from '../../context/DataContext';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
+const NEW_CATEGORY_VALUE = '__new__';
+
 export default function ProductForm({ initial, onSave, onCancel }) {
   const cleaned = stripMeta(initial);
+  const { categorias } = useData();
+  const [newCategoryMode, setNewCategoryMode] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const [form, setForm] = useState({
     name: cleaned?.name || '',
@@ -25,6 +32,15 @@ export default function ProductForm({ initial, onSave, onCancel }) {
     featured: cleaned?.featured ?? false,
   });
 
+  const categoryOptions = useMemo(() => {
+    const options = getCategoryOptions(categorias);
+    const current = form.category;
+    if (current && !options.some((o) => o.value === current)) {
+      options.unshift({ value: current, label: current });
+    }
+    return options;
+  }, [categorias, form.category]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({
@@ -33,10 +49,28 @@ export default function ProductForm({ initial, onSave, onCancel }) {
     }));
   };
 
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    if (value === NEW_CATEGORY_VALUE) {
+      setNewCategoryMode(true);
+      setNewCategoryName('');
+    } else {
+      setNewCategoryMode(false);
+      setForm((prev) => ({ ...prev, category: value }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    let category = form.category;
+    if (newCategoryMode) {
+      const name = newCategoryName.trim();
+      if (!name) return;
+      category = slugify(name);
+    }
     const data = {
       ...form,
+      category,
       price: form.price !== '' ? Number(form.price) : undefined,
       gallery: form.gallery ? form.gallery.split('\n').map((s) => s.trim()).filter(Boolean) : [],
       tags: form.tags ? form.tags.split(',').map((s) => s.trim()).filter(Boolean) : [],
@@ -58,9 +92,30 @@ export default function ProductForm({ initial, onSave, onCancel }) {
           <Input label="Slug" name="slug" value={form.slug} onChange={handleChange} placeholder="auto desde nombre" />
           <div className="space-y-1">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
-            <select name="category" value={form.category} onChange={handleChange} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100">
-              {PRODUCT_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
-            </select>
+            {newCategoryMode ? (
+              <>
+                <input
+                  name="newCategoryName"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Nombre de la nueva categoría"
+                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => { setNewCategoryMode(false); setNewCategoryName(''); }}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  ← Usar categoría existente
+                </button>
+              </>
+            ) : (
+              <select name="category" value={form.category} onChange={handleCategoryChange} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100">
+                {categoryOptions.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
+                <option value={NEW_CATEGORY_VALUE}>+ Nueva categoría</option>
+              </select>
+            )}
           </div>
           <Input label="Precio (Bs)" name="price" type="number" value={form.price} onChange={handleChange} icon={DollarSign} />
         </div>
