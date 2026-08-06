@@ -84,12 +84,23 @@ El panel **nunca se comunica directamente** con SheetDB ni con Google Sheets. To
 
 - Tabla con columnas: ID, Nombre, Categoría, Precio (Bs), Destacado
 - Modal de formulario para crear/editar con campos:
-  - Nombre, Slug (auto-generable), Categoría, Precio
+  - Nombre, Slug (auto-generable), Precio
+  - Categoría (dinámica desde la API, con opción de crear una nueva — ver [Categorías Dinámicas](#categorías-dinámicas))
   - Imagen URL, Galería (múltiples URLs), Descripción
   - Configuración de audiencia: General (disponible/personalizable) y Business (disponible/personalizable)
   - Tags, Destacado (checkbox)
 - Modo eliminar batch con selección múltiple
 - Confirmación antes de marcar elementos para eliminación
+
+### Categorías Dinámicas
+
+Las categorías de productos ya no son una constante estática: se obtienen de la API (`GET /api/categorias`), que las **deriva automáticamente** de la columna `category` de los productos y las enriquece con `name` legible, `count` y metadata SEO.
+
+- El `<select>` de categorías del formulario se carga desde la API (valor = `slug`, etiqueta = `name`) con fallback a constantes locales si la API falla
+- Opción **"+ Nueva categoría"** en el formulario: permite escribir un nombre nuevo, que se normaliza a slug y se envía con el producto; la API crea la categoría implícitamente al guardar el producto
+- El gráfico "Productos por Categoría" del Dashboard usa los nombres legibles devueltos por la API (ej. "Regalos Festivos" en vez de "festivos")
+- La caché de categorías se invalida automáticamente tras cada escritura de productos, ya que el listado depende de ellos
+- **Nota de latencia:** por la caché de edge de la API, una categoría recién creada puede tardar hasta 1 hora en aparecer en `GET /api/categorias`; el input "+ Nueva categoría" hace que el flujo funcione de inmediato
 
 ### Gestión de Trabajos
 
@@ -142,7 +153,9 @@ admin-recuerdos/
 │   │       └── ConfirmDialog.jsx      # Diálogo de confirmación responsive
 │   ├── context/
 │   │   ├── AuthContext.jsx            # Estado de autenticación (token, email, login, logout)
-│   │   └── PendingChangesContext.jsx   # Estado de cambios pendientes (reducer + localStorage)
+│   │   ├── DataContext.jsx            # Caché compartida de productos, trabajos y categorías
+│   │   ├── PendingChangesContext.jsx  # Estado de cambios pendientes (reducer + localStorage)
+│   │   └── ThemeContext.jsx           # Tema claro/oscuro
 │   ├── features/
 │   │   ├── auth/
 │   │   │   ├── AuthContainer.jsx      # Lógica de login
@@ -175,6 +188,7 @@ admin-recuerdos/
 │   │   ├── client.js                  # Cliente HTTP base (fetch + token + caché)
 │   │   ├── cache.js                   # Lógica de caché en memoria (TTL 1 hora)
 │   │   ├── auth.js                    # Endpoints de autenticación
+│   │   ├── categorias.js              # Endpoints de categorías
 │   │   ├── productos.js               # Endpoints de productos
 │   │   └── trabajos.js                # Endpoints de trabajos
 │   ├── middleware/
@@ -182,8 +196,10 @@ admin-recuerdos/
 │   ├── pages/
 │   │   └── index.astro                # Entry point: HTML shell + AppRouter
 │   └── utils/
+│       ├── categories.js              # Helpers de categorías dinámicas (con fallback)
+│       ├── slugify.js                 # Normalización a slug (igual que la API)
 │       ├── stripMeta.js               # Limpieza de metadatos de pending changes
-│       └── constants.js               # Categorías de productos y trabajos
+│       └── constants.js               # Categorías estáticas de fallback (productos y trabajos)
 ├── .env                               # Variables de entorno
 ├── .env.example                       # Template de variables documentadas
 ├── astro.config.mjs                   # Configuración de Astro
@@ -197,7 +213,7 @@ admin-recuerdos/
 
 | Componente | Archivo | Rol |
 |---|---|---|
-| `AppRouter` | `middleware/AppRouter.jsx` | Providers globales (`AuthProvider`, `PendingChangesProvider`) + definición de rutas |
+| `AppRouter` | `middleware/AppRouter.jsx` | Providers globales (`AuthProvider`, `ThemeProvider`, `DataProvider`, `PendingChangesProvider`, `ToastProvider`) + definición de rutas |
 | `Layout` | `components/layout/Layout.jsx` | Sidebar, topbar mobile, botón de cambios pendientes y slot para contenido |
 | `AuthContainer` | `features/auth/AuthContainer.jsx` | Lógica de login: estado del form, validación, llamada API |
 | `AuthView` | `features/auth/AuthView.jsx` | UI del formulario de inicio de sesión |
@@ -207,7 +223,7 @@ admin-recuerdos/
 | `StatCard` | `features/dashboard/StatCard.jsx` | Tarjeta individual de métrica con badge de pendientes |
 | `ProductosContainer` | `features/productos/ProductosContainer.jsx` | Lógica CRUD de productos: fetch, estado local, dispatch a contexto |
 | `ProductosView` | `features/productos/ProductosView.jsx` | UI: tabla de productos, modo eliminar, formularios y modales |
-| `ProductForm` | `features/productos/ProductForm.jsx` | Modal con formulario completo de producto (13 campos) |
+| `ProductForm` | `features/productos/ProductForm.jsx` | Modal con formulario completo de producto (13 campos); categorías dinámicas desde la API con opción "+ Nueva categoría" |
 | `TrabajosContainer` | `features/trabajos/TrabajosContainer.jsx` | Lógica CRUD de trabajos: fetch, estado local, dispatch a contexto |
 | `TrabajosView` | `features/trabajos/TrabajosView.jsx` | UI: tabla de trabajos, modo eliminar, formularios y modales |
 | `TrabajoForm` | `features/trabajos/TrabajoForm.jsx` | Modal con formulario de trabajo (5 campos) |
@@ -223,6 +239,8 @@ admin-recuerdos/
 | Contexto | Archivo | Estado | Persistencia |
 |---|---|---|---|
 | `AuthContext` | `context/AuthContext.jsx` | token, email, isAuthenticated | localStorage (token, email) |
+| `DataContext` | `context/DataContext.jsx` | productos, trabajos, categorias, loading | caché en memoria (lib/cache.js) |
+| `ThemeContext` | `context/ThemeContext.jsx` | theme, isDark | localStorage (theme) |
 | `PendingChangesContext` | `context/PendingChangesContext.jsx` | productos (creates, updates), trabajos (creates, updates), pendingDeletes | localStorage (pendingChanges) |
 
 #### PendingChangesContext — Acciones del Reducer
@@ -255,6 +273,7 @@ El cliente HTTP está dividido en módulos independientes por recurso:
 | **Caché** | `lib/cache.js` | Estado de caché en memoria con TTL de 1 hora para lecturas (GET) |
 | **Auth** | `lib/auth.js` | `login(email, password)` |
 | **Productos** | `lib/productos.js` | `getProductos`, `getProducto`, `createProducto`, `updateProducto`, `deleteProducto`, `batchSave`, `batchDelete` |
+| **Categorías** | `lib/categorias.js` | `getCategorias`, `invalidateCategorias` |
 | **Trabajos** | `lib/trabajos.js` | `getTrabajos`, `getTrabajo`, `createTrabajo`, `updateTrabajo`, `deleteTrabajo`, `batchSave`, `batchDelete` |
 
 Todas las funciones comparten el mismo cliente base que proporciona:
@@ -390,6 +409,18 @@ El panel consume los siguientes endpoints de `api-recuerdos`. Todos los endpoint
 | `DELETE` | `/api/productos/:id` | Eliminar producto |
 | `POST` | `/api/productos/batch` | Crear/actualizar múltiples productos |
 | `POST` | `/api/productos/batch/delete` | Eliminar múltiples productos |
+
+### Categorías
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/api/categorias` | Listar categorías derivadas de productos (`slug`, `name`, `count`, `image`, `seo`) |
+| `GET` | `/api/categorias/:slug` | Obtener una categoría por slug |
+| `GET` | `/api/categorias/:slug/productos` | Productos de una categoría |
+| `PATCH` | `/api/categorias/:slug` | Renombrar categoría (actualiza la categoría de todos sus productos) |
+| `DELETE` | `/api/categorias/:slug?destino=` | Eliminar categoría moviendo sus productos al `destino` indicado |
+
+> Las categorías **no tienen endpoint de creación**: se crean implícitamente al guardar un producto con una `category` nueva. Por eso el formulario de producto permite escribir una categoría nueva, que se normaliza a slug y viaja con el producto.
 
 ### Trabajos
 

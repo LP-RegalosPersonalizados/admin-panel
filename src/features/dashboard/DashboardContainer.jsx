@@ -2,7 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { useData } from '../../context/DataContext';
 import { usePendingChanges } from '../../context/PendingChangesContext';
 import { getActivityLog } from '../../utils/activityLog';
-import { PRODUCT_CATEGORIES, TRABAJO_CATEGORIES } from '../../utils/constants';
+import { getCategorySlugs, getCategoryLabels } from '../../utils/categories';
+import { TRABAJO_CATEGORIES } from '../../utils/constants';
 import DashboardView from './DashboardView';
 import {
   getCategoryCount,
@@ -17,7 +18,7 @@ import {
 } from './stats';
 
 export default function DashboardContainer() {
-  const { productos, trabajos, loading, loadIfNeeded } = useData();
+  const { productos, trabajos, categorias, loading, loadIfNeeded } = useData();
   const { state, getEffectiveList, getResourceCounts, pendingCount } = usePendingChanges();
 
   useEffect(() => { loadIfNeeded(); }, [loadIfNeeded]);
@@ -31,12 +32,24 @@ export default function DashboardContainer() {
     [getEffectiveList, trabajos]
   );
 
+  const categorySlugs = useMemo(() => getCategorySlugs(categorias), [categorias]);
+  const categoryLabels = useMemo(() => getCategoryLabels(categorias), [categorias]);
+
+  const categoryDist = useMemo(
+    () =>
+      getCategoryDist(effectiveProductos, categorySlugs).map((d) => ({
+        ...d,
+        name: categoryLabels[d.name] || d.name,
+      })),
+    [effectiveProductos, categorySlugs, categoryLabels]
+  );
+
   const stats = useMemo(
     () => ({
       productosCount: effectiveProductos.length,
       trabajosCount: effectiveTrabajos.length,
       categoryCount: getCategoryCount(effectiveProductos),
-      categoryDist: getCategoryDist(effectiveProductos, PRODUCT_CATEGORIES),
+      categoryDist,
       trabajosByCat: getCategoryDist(effectiveTrabajos, TRABAJO_CATEGORIES),
       priceStats: getPriceStats(effectiveProductos),
       audienceStats: getAudienceStats(effectiveProductos),
@@ -46,7 +59,7 @@ export default function DashboardContainer() {
       recentTrabajos: getRecentAdded(effectiveTrabajos, 5),
       featuredProducts: getFeaturedProducts(effectiveProductos),
     }),
-    [effectiveProductos, effectiveTrabajos]
+    [effectiveProductos, effectiveTrabajos, categoryDist]
   );
 
   const activityLog = useMemo(() => buildActivityFeed(state, getActivityLog()), [state]);
