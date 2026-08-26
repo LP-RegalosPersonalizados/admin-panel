@@ -91,7 +91,7 @@ export default function ProductForm({ initial, onSave, onCancel }) {
           <Input label="Nombre *" name="name" value={form.name} onChange={handleChange} required />
           <Input label="Slug" name="slug" value={form.slug} onChange={handleChange} placeholder="auto desde nombre" />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
+            <label className="block text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">Categoría</label>
             {newCategoryMode ? (
               <>
                 <input
@@ -99,19 +99,19 @@ export default function ProductForm({ initial, onSave, onCancel }) {
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   placeholder="Nombre de la nueva categoría"
-                  className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100"
+                  className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]"
                   autoFocus
                 />
                 <button
                   type="button"
                   onClick={() => { setNewCategoryMode(false); setNewCategoryName(''); }}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-xs text-[#0071e3] dark:text-[#2997ff] hover:underline"
                 >
                   ← Usar categoría existente
                 </button>
               </>
             ) : (
-              <select name="category" value={form.category} onChange={handleCategoryChange} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100">
+              <select name="category" value={form.category} onChange={handleCategoryChange} className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]">
                 {categoryOptions.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
                 <option value={NEW_CATEGORY_VALUE}>+ Nueva categoría</option>
               </select>
@@ -123,34 +123,34 @@ export default function ProductForm({ initial, onSave, onCancel }) {
         <Input label="Imagen URL" name="image" value={form.image} onChange={handleChange} icon={Image} />
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Galería (1 URL por línea)</label>
-          <textarea name="gallery" value={form.gallery} onChange={handleChange} rows={3} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100" />
+          <label className="block text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">Galería (1 URL por línea)</label>
+          <textarea name="gallery" value={form.gallery} onChange={handleChange} rows={3} className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]" />
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
-          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100" />
+          <label className="block text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">Descripción</label>
+          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]" />
         </div>
 
         <Input label="Tags (separados por coma)" name="tags" value={form.tags} onChange={handleChange} icon={Hash} placeholder="ej: regalo, taza, personalizado" />
 
-        <fieldset className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-          <legend className="text-sm font-semibold px-1 text-slate-700 dark:text-slate-300">Audiencia General</legend>
+        <fieldset className="border border-[#d2d2d7] dark:border-[#38383a] rounded-lg p-4">
+          <legend className="text-sm font-semibold px-1 text-[#1d1d1f] dark:text-[#f5f5f7]">Audiencia General</legend>
           <div className="flex gap-6 mt-2">
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="general_available" checked={form.general_available} onChange={handleChange} className={checkClass} /> Disponible</label>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="general_customizable" checked={form.general_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
+            <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]"><input type="checkbox" name="general_available" checked={form.general_available} onChange={handleChange} className={checkClass} /> Disponible</label>
+            <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]"><input type="checkbox" name="general_customizable" checked={form.general_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
           </div>
         </fieldset>
 
-        <fieldset className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-          <legend className="text-sm font-semibold px-1 text-slate-700 dark:text-slate-300">Audiencia Business</legend>
+        <fieldset className="border border-[#d2d2d7] dark:border-[#38383a] rounded-lg p-4">
+          <legend className="text-sm font-semibold px-1 text-[#1d1d1f] dark:text-[#f5f5f7]">Audiencia Business</legend>
           <div className="flex gap-6 mt-2">
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="business_available" checked={form.business_available} onChange={handleChange} className={checkClass} /> Disponible</label>
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="business_customizable" checked={form.business_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
+            <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]"><input type="checkbox" name="business_available" checked={form.business_available} onChange={handleChange} className={checkClass} /> Disponible</label>
+            <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]"><input type="checkbox" name="business_customizable" checked={form.business_customizable} onChange={handleChange} className={checkClass} /> Personalizable</label>
           </div>
         </fieldset>
 
-        <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400"><input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className={checkClass} /> <Star size={14} className="text-amber-500" /> Destacado</label>
+        <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]"><input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className={checkClass} /> <Star size={14} className="text-amber-500" /> Destacado</label>
 
         <div className="flex gap-3 justify-end pt-2">
           <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>

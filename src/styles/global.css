@@ -1,84 +1,41 @@
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------ */
-/* Dark mode: el toggle agrega la clase `.dark` en <html>.           */
-/* Esta variante hace que `dark:*` responda a la clase y no al OS.    */
-/* ------------------------------------------------------------------ */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ------------------------------------------------------------------ */
-/* Design tokens                                                      */
-/* ------------------------------------------------------------------ */
 @theme {
-  /* Animaciones */
   --animate-slide-up: slide-up 0.2s ease-out;
   --animate-fade-in: fade-in 0.15s ease-out;
   --animate-slide-right: slide-right 0.25s ease-out;
   --animate-spin-slow: spin 2s linear infinite;
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
 
-  /* Tipografía */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ------------------------------------------------------------------ */
-/* Keyframes                                                          */
-/* ------------------------------------------------------------------ */
 @keyframes slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slide-right {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-/* ------------------------------------------------------------------ */
-/* Estilos base globales                                              */
-/* ------------------------------------------------------------------ */
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-
-  .dark {
-    color-scheme: dark;
-  }
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
 
   html {
     -webkit-font-smoothing: antialiased;
@@ -86,28 +43,82 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+    @apply bg-white text-[#1d1d1f] dark:bg-black dark:text-[#f5f5f7];
     font-family: var(--font-sans);
   }
 
   ::selection {
-    @apply bg-blue-600/20 text-blue-900 dark:text-blue-100;
+    background-color: rgba(0, 113, 227, 0.2);
+    color: #1d1d1f;
+  }
+  .dark ::selection {
+    color: #f5f5f7;
   }
 
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #aeaeb2; }
+  .dark ::-webkit-scrollbar-thumb { background: #48484a; }
+  .dark ::-webkit-scrollbar-thumb:hover { background: #636366; }
+}
 
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
+/* Bento Grid utilities */
+.bento-dashboard {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
 
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full dark:bg-slate-600;
+@media (min-width: 640px) {
+  .bento-dashboard {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-500;
+@media (min-width: 1024px) {
+  .bento-dashboard {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.bento-cell {
+  background-color: #f5f5f7;
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.bento-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:where(.dark) .bento-cell {
+  background-color: #161617;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:where(.dark) .bento-cell-interactive:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.bento-cell-interactive {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bento-cell-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 639px) {
+  .bento-cell {
+    border-radius: 20px;
+    padding: 16px;
   }
 }

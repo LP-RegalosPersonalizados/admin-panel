@@ -13,7 +13,7 @@ export default function DataTable({
   onDeleteSelected,
   onCancelDelete,
 }) {
-  if (loading) return <p className="text-slate-500 dark:text-slate-400">Cargando...</p>;
+  if (loading) return <p className="text-[#6e6e73] dark:text-[#86868b]">Cargando...</p>;
 
   const allIds = data.map((r) => r.id).filter(Boolean);
   const allSelected = allIds.length > 0 && selectedIds && selectedIds.size === allIds.length;
@@ -36,7 +36,7 @@ export default function DataTable({
     <div>
       {selectable && selectedIds && onSelectionChange && (
         <div className="flex items-center justify-between mb-3">
-          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <label className="flex items-center gap-2 text-sm text-[#6e6e73] dark:text-[#86868b]">
             <input
               type="checkbox"
               checked={allSelected}
@@ -47,7 +47,7 @@ export default function DataTable({
           </label>
           {selectedIds.size > 0 && (
             <div className="flex gap-2 items-center">
-              <span className="text-sm text-slate-500 dark:text-slate-400">{selectedIds.size} seleccionado(s)</span>
+              <span className="text-sm text-[#6e6e73] dark:text-[#86868b]">{selectedIds.size} seleccionado(s)</span>
               {onDeleteSelected && (
                 <Button
                   variant="danger"
@@ -75,21 +75,21 @@ export default function DataTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 border-slate-200 dark:border-slate-700">
+            <tr className="bg-[#f5f5f7] dark:bg-[#161617] border-b-2 border-[#d2d2d7] dark:border-[#38383a]">
               {selectable && <th className="p-3 w-10"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="w-4 h-4" /></th>}
               {columns.map((col) => (
-                <th key={col.key} className="p-3 text-left font-semibold text-sm whitespace-nowrap text-slate-700 dark:text-slate-300">
+                <th key={col.key} className="p-3 text-left font-semibold text-sm whitespace-nowrap text-[#1d1d1f] dark:text-[#f5f5f7]">
                   {col.label}
                 </th>
               ))}
-              <th className="p-3 text-left font-semibold text-sm whitespace-nowrap text-slate-700 dark:text-slate-300">Acciones</th>
+              <th className="p-3 text-left font-semibold text-sm whitespace-nowrap text-[#1d1d1f] dark:text-[#f5f5f7]">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 1 + (selectable ? 1 : 0)} className="p-8 text-center">
-                  <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                  <div className="flex flex-col items-center justify-center text-[#8e8e93] dark:text-[#636366]">
                     <Inbox size={40} className="mb-2" />
                     <p className="text-sm">No hay datos</p>
                   </div>
@@ -105,11 +105,11 @@ export default function DataTable({
                 return (
                   <tr
                     key={row.id || i}
-                    className={`border-b border-slate-200 dark:border-slate-700 ${
+                    className={`border-b border-[#d2d2d7] dark:border-[#38383a] ${
                       isPendingDelete ? 'bg-red-50 dark:bg-red-900/20 opacity-60' : ''
                     } ${isPendingNew ? 'bg-green-50 dark:bg-green-900/20' : ''} ${
-                      isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                    } ${!isPendingDelete && !isPendingNew && !isSelected ? 'bg-white dark:bg-slate-800' : ''}`}
+                      isSelected ? 'bg-[rgba(0,113,227,0.08)] dark:bg-[rgba(10,132,255,0.15)]' : ''
+                    } ${!isPendingDelete && !isPendingNew && !isSelected ? 'bg-white dark:bg-[#161617]' : ''}`}
                   >
                     {selectable && (
                       <td className="p-3">
@@ -124,7 +124,7 @@ export default function DataTable({
                       </td>
                     )}
                     {columns.map((col) => (
-                      <td key={col.key} className="p-3 text-sm text-slate-700 dark:text-slate-300">
+                      <td key={col.key} className="p-3 text-sm text-[#1d1d1f] dark:text-[#f5f5f7]">
                         <div className="flex items-center gap-2">
                           {col.render ? col.render(row[col.key], row) : row[col.key]}
                           {isPendingNew && <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-1.5 py-0.5 rounded font-medium">Nuevo</span>}

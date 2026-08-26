@@ -2,14 +2,14 @@ import { XCircle } from 'lucide-react';
 
 export default function PendingItem({ icon: Icon, iconClass, label, sublabel, sublabelClass, onDiscard }) {
   return (
-    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-sm group">
+    <div className="flex items-center justify-between bg-[#f5f5f7] dark:bg-[#38383a] rounded-lg px-3 py-2 text-sm group">
       <div className="flex items-center gap-2 min-w-0">
         <span className={`flex-shrink-0 ${iconClass || ''}`}>
           {Icon && <Icon size={16} />}
         </span>
         <div className="truncate">
-          <p className="truncate text-slate-700 dark:text-slate-200">{label}</p>
-          <p className={`text-xs ${sublabelClass || 'text-slate-400 dark:text-slate-500'}`}>{sublabel}</p>
+          <p className="truncate text-[#1d1d1f] dark:text-[#f5f5f7]">{label}</p>
+          <p className={`text-xs ${sublabelClass || 'text-[#8e8e93] dark:text-[#636366]'}`}>{sublabel}</p>
         </div>
       </div>
       <button

@@ -6,13 +6,13 @@ export default function PendingResourceSection({ title, creates, updates, delete
 
   return (
     <div>
-      <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{title}</h3>
+      <h3 className="text-xs font-semibold text-[#8e8e93] dark:text-[#636366] uppercase tracking-wider mb-2">{title}</h3>
       <div className="space-y-1.5">
         {creates.map((c) => (
           <PendingItem
             key={c.tempId}
             icon={PlusCircle}
-            iconClass="text-blue-500"
+            iconClass="text-[#0071e3] dark:text-[#2997ff]"
             label={getName(c.data)}
             sublabel="Nuevo"
             onDiscard={() => dispatch({ type: 'DISCARD_CREATE', resource, tempId: c.tempId })}

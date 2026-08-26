@@ -14,7 +14,7 @@ const COLORS = {
   success: 'border-l-emerald-500',
   error: 'border-l-red-500',
   warning: 'border-l-amber-500',
-  info: 'border-l-blue-500',
+  info: 'border-l-[#0071e3]',
 };
 
 export function ToastProvider({ children }) {
@@ -50,13 +50,13 @@ function ToastItem({ toast, onClose }) {
   }, [toast.duration, onClose]);
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg border-l-4 ${COLORS[toast.type]} p-4 animate-slide-right flex gap-3`}>
-      {Icon && <Icon size={20} className="text-slate-500 dark:text-slate-400 shrink-0 mt-0.5" />}
+    <div className={`bg-white dark:bg-[#161617] rounded-lg shadow-lg border-l-4 ${COLORS[toast.type]} p-4 animate-slide-right flex gap-3`}>
+      {Icon && <Icon size={20} className="text-[#6e6e73] dark:text-[#86868b] shrink-0 mt-0.5" />}
       <div className="flex-1 min-w-0">
-        {toast.title && <p className="text-sm font-semibold text-slate-900 dark:text-white">{toast.title}</p>}
-        {toast.message && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{toast.message}</p>}
+        {toast.title && <p className="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{toast.title}</p>}
+        {toast.message && <p className="text-xs text-[#6e6e73] dark:text-[#86868b] mt-0.5">{toast.message}</p>}
       </div>
-      <button onClick={onClose} className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+      <button onClick={onClose} className="shrink-0 text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]">
         <X size={16} />
       </button>
     </div>

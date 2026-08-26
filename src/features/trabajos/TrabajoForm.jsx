@@ -33,16 +33,16 @@ export default function TrabajoForm({ initial, onSave, onCancel }) {
         <Input label="Título *" name="title" value={form.title} onChange={handleChange} required />
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
-          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100" />
+          <label className="block text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">Descripción</label>
+          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]" />
         </div>
 
         <Input label="Imagen URL" name="image" value={form.image} onChange={handleChange} icon={Image} />
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
-            <select name="category" value={form.category} onChange={handleChange} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm bg-white dark:bg-slate-700 dark:text-slate-100">
+            <label className="block text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">Categoría</label>
+            <select name="category" value={form.category} onChange={handleChange} className="w-full p-2 border border-[#d2d2d7] dark:border-[#48484a] rounded-md text-sm bg-white dark:bg-[#38383a] dark:text-[#f5f5f7]">
               {TRABAJO_CATEGORIES.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
           </div>

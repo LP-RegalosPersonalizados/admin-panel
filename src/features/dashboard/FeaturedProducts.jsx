@@ -41,10 +41,10 @@ export default function FeaturedProducts({ items = [], total = 0 }) {
       icon={Star}
       iconClassName="text-amber-500 dark:text-amber-400"
       action={count > 0 ? <Badge variant="warning">{count} de {total}</Badge> : null}
-      className="h-full"
+      className="h-full bg-transparent! shadow-none! border-none! dark:bg-transparent! dark:border-none! p-0!"
     >
       {count === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-500">
+        <div className="flex flex-col items-center justify-center py-10 text-[#8e8e93] dark:text-[#636366]">
           <Inbox size={32} className="mb-2" />
           <p className="text-sm">Sin productos destacados</p>
         </div>
@@ -59,13 +59,13 @@ export default function FeaturedProducts({ items = [], total = 0 }) {
               onClick={prev}
               disabled={!hasMultiple}
               aria-label="Anterior destacado"
-              className="shrink-0 p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="shrink-0 p-1.5 rounded-md text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] hover:bg-[#f5f5f7] dark:hover:bg-[#38383a] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               <ChevronLeft size={18} />
             </button>
 
             <div className="flex-1 flex items-center gap-4 min-w-0">
-              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#f5f5f7] dark:bg-[#38383a] flex items-center justify-center">
                 {items[index].image && !imgError ? (
                   <img
                     src={items[index].image}
@@ -74,15 +74,15 @@ export default function FeaturedProducts({ items = [], total = 0 }) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <ImageIcon size={24} className="text-slate-300 dark:text-slate-500" />
+                  <ImageIcon size={24} className="text-[#d2d2d7] dark:text-[#636366]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                <p className="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] truncate">
                   {items[index].name || 'Sin nombre'}
                 </p>
                 {items[index].category && (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 capitalize mb-1">{items[index].category}</p>
+                  <p className="text-xs text-[#8e8e93] dark:text-[#636366] capitalize mb-1">{items[index].category}</p>
                 )}
                 <p className="text-sm font-bold text-amber-600 dark:text-amber-400">
                   Bs {formatCurrency(items[index].price)}
@@ -94,7 +94,7 @@ export default function FeaturedProducts({ items = [], total = 0 }) {
               onClick={next}
               disabled={!hasMultiple}
               aria-label="Siguiente destacado"
-              className="shrink-0 p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="shrink-0 p-1.5 rounded-md text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] hover:bg-[#f5f5f7] dark:hover:bg-[#38383a] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               <ChevronRight size={18} />
             </button>
@@ -108,7 +108,7 @@ export default function FeaturedProducts({ items = [], total = 0 }) {
                   onClick={() => { setIndex(i); setImgError(false); }}
                   aria-label={`Ir al destacado ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
-                    i === index ? 'w-5 bg-amber-500 dark:bg-amber-400' : 'w-1.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
+                    i === index ? 'w-5 bg-amber-500 dark:bg-amber-400' : 'w-1.5 bg-[#d2d2d7] dark:bg-[#48484a] hover:bg-[#aeaeb2]'
                   }`}
                 />
               ))}

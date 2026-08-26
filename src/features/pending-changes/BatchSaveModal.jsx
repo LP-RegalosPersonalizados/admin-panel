@@ -99,14 +99,14 @@ export default function BatchSaveModal({ isOpen, onClose }) {
       {!saving && !result && (
         <>
           {totalChanges === 0 ? (
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No hay cambios pendientes para guardar.</p>
+            <p className="text-[#6e6e73] dark:text-[#86868b] text-sm">No hay cambios pendientes para guardar.</p>
           ) : (
             <>
               <div className="space-y-3 mb-6">
                 {pCounts.total > 0 && (
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <p className="font-semibold text-sm mb-1 text-slate-700 dark:text-slate-200">Productos</p>
-                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-0.5">
+                  <div className="bg-[#f5f5f7] dark:bg-[#38383a] rounded-lg p-3">
+                    <p className="font-semibold text-sm mb-1 text-[#1d1d1f] dark:text-[#f5f5f7]">Productos</p>
+                    <ul className="text-sm text-[#6e6e73] dark:text-[#86868b] space-y-0.5">
                       {pCounts.creates > 0 && <li>• {pCounts.creates} nuevo(s)</li>}
                       {pCounts.updates > 0 && <li>• {pCounts.updates} modificación(es)</li>}
                       {pCounts.deletes > 0 && <li className="text-red-600 dark:text-red-400">• {pCounts.deletes} eliminación(es)</li>}
@@ -114,9 +114,9 @@ export default function BatchSaveModal({ isOpen, onClose }) {
                   </div>
                 )}
                 {tCounts.total > 0 && (
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <p className="font-semibold text-sm mb-1 text-slate-700 dark:text-slate-200">Trabajos</p>
-                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-0.5">
+                  <div className="bg-[#f5f5f7] dark:bg-[#38383a] rounded-lg p-3">
+                    <p className="font-semibold text-sm mb-1 text-[#1d1d1f] dark:text-[#f5f5f7]">Trabajos</p>
+                    <ul className="text-sm text-[#6e6e73] dark:text-[#86868b] space-y-0.5">
                       {tCounts.creates > 0 && <li>• {tCounts.creates} nuevo(s)</li>}
                       {tCounts.updates > 0 && <li>• {tCounts.updates} modificación(es)</li>}
                       {tCounts.deletes > 0 && <li className="text-red-600 dark:text-red-400">• {tCounts.deletes} eliminación(es)</li>}
@@ -136,8 +136,8 @@ export default function BatchSaveModal({ isOpen, onClose }) {
 
       {saving && (
         <div className="py-8 text-center">
-          <Loader2 size={32} className="animate-spin text-blue-500 mx-auto mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 text-sm">Guardando cambios...</p>
+          <Loader2 size={32} className="animate-spin text-[#0071e3] mx-auto mb-3" />
+          <p className="text-[#6e6e73] dark:text-[#86868b] text-sm">Guardando cambios...</p>
         </div>
       )}
 
@@ -147,7 +147,7 @@ export default function BatchSaveModal({ isOpen, onClose }) {
             <div className="py-6 text-center">
               <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-2" />
               <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-1">Cambios guardados</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Recargando página...</p>
+              <p className="text-[#6e6e73] dark:text-[#86868b] text-sm">Recargando página...</p>
             </div>
           ) : (
             <div className="py-4">
