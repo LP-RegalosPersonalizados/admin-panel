@@ -1,9 +1,9 @@
 const variants = {
-  default: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+  default: 'bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#38383a] dark:text-[#f5f5f7]',
   success: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   danger: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  info: 'bg-[rgba(0,113,227,0.12)] text-[#0071e3] dark:bg-[rgba(10,132,255,0.18)] dark:text-[#2997ff]',
 };
 
 const sizes = {

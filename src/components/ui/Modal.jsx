@@ -44,14 +44,14 @@ export default function Modal({ isOpen, onClose, title, size = 'md', children, f
       <div
         ref={contentRef}
         tabIndex={-1}
-        className={`relative w-full sm:rounded-xl bg-white dark:bg-slate-800 shadow-xl animate-slide-up sm:animate-fade-in ${sizes[size]} max-h-[90vh] flex flex-col`}
+        className={`relative w-full sm:rounded-2xl bg-white dark:bg-[#161617] shadow-xl animate-slide-up sm:animate-fade-in ${sizes[size]} max-h-[90vh] flex flex-col`}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#d2d2d7] dark:border-[#38383a]">
+            <h2 className="text-lg font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-700"
+              className="p-1 rounded-md text-[#8e8e93] hover:text-[#1d1d1f] hover:bg-[#f5f5f7] dark:hover:text-[#f5f5f7] dark:hover:bg-[#38383a]"
             >
               <X size={20} />
             </button>
@@ -59,7 +59,7 @@ export default function Modal({ isOpen, onClose, title, size = 'md', children, f
         )}
         <div className="flex-1 overflow-y-auto p-6">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#d2d2d7] dark:border-[#38383a]">
             {footer}
           </div>
         )}

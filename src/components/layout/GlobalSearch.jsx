@@ -92,10 +92,10 @@ export default function GlobalSearch({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[70]">
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={onClose} />
-      <div className="relative max-w-xl mx-4 sm:mx-auto mt-16 sm:mt-20 bg-white dark:bg-slate-800 rounded-xl shadow-2xl animate-fade-in overflow-hidden">
+      <div className="relative max-w-xl mx-4 sm:mx-auto mt-16 sm:mt-20 bg-white dark:bg-[#161617] rounded-xl shadow-2xl animate-fade-in overflow-hidden">
         {/* Input row */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <Search size={18} className="text-slate-400 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#d2d2d7] dark:border-[#38383a]">
+          <Search size={18} className="text-[#8e8e93] shrink-0" />
           <input
             ref={inputRef}
             value={query}
@@ -104,7 +104,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
               setActiveIndex(0);
             }}
             placeholder="Buscar productos o trabajos..."
-            className="flex-1 bg-transparent outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
+            className="flex-1 bg-transparent outline-none text-[#1d1d1f] dark:text-[#f5f5f7] placeholder:text-[#8e8e93] dark:placeholder:text-[#636366] text-sm"
           />
           {query ? (
             <button
@@ -112,26 +112,26 @@ export default function GlobalSearch({ isOpen, onClose }) {
                 setQuery('');
                 inputRef.current?.focus();
               }}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-0.5 rounded cursor-pointer"
+              className="text-[#8e8e93] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] p-0.5 rounded cursor-pointer"
               aria-label="Limpiar búsqueda"
             >
               <X size={16} />
             </button>
           ) : (
-            <kbd className="text-xs text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-600 rounded px-1.5 py-0.5">ESC</kbd>
+            <kbd className="text-xs text-[#8e8e93] dark:text-[#636366] border border-[#d2d2d7] dark:border-[#48484a] rounded px-1.5 py-0.5">ESC</kbd>
           )}
         </div>
 
         {/* Results */}
         <div className="max-h-80 overflow-y-auto p-2">
           {!query.trim() ? (
-            <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-500">
+            <div className="flex flex-col items-center justify-center py-10 text-[#8e8e93] dark:text-[#636366]">
               <Search size={32} className="mb-2" />
               <p className="text-sm">Escribe para buscar productos o trabajos</p>
               <p className="text-xs mt-1">Por nombre, título o categoría</p>
             </div>
           ) : flat.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-500">
+            <div className="flex flex-col items-center justify-center py-10 text-[#8e8e93] dark:text-[#636366]">
               <Inbox size={32} className="mb-2" />
               <p className="text-sm">Sin resultados para “{query.trim()}”</p>
             </div>
@@ -140,7 +140,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
               if (!section.items.length) return null;
               return (
                 <div key={section.title} className="mb-1">
-                  <div className="px-3 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-[#8e8e93] dark:text-[#636366] uppercase tracking-wider flex items-center justify-between">
                     <span>{section.title}</span>
                     <span className="text-[10px] font-medium">{section.items.length}</span>
                   </div>
@@ -160,19 +160,19 @@ export default function GlobalSearch({ isOpen, onClose }) {
                         onMouseMove={() => { if (!isActive) setActiveIndex(index); }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors duration-100 cursor-pointer ${
                           isActive
-                            ? 'bg-blue-50 dark:bg-slate-700'
-                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                            ? 'bg-[rgba(0,113,227,0.08)] dark:bg-[#38383a]'
+                            : 'hover:bg-[#f5f5f7] dark:hover:bg-[#38383a]'
                         }`}
                       >
-                        <div className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0">
+                        <div className="p-1.5 rounded-md bg-[#f5f5f7] dark:bg-[#38383a] text-[#6e6e73] dark:text-[#86868b] shrink-0">
                           <Icon size={14} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                          <p className="text-sm font-medium text-[#1d1d1f] dark:text-[#f5f5f7] truncate">
                             {item[RESOURCE_CONFIG[item.__type].field]}
                           </p>
                           {item.category && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate capitalize">{item.category}</p>
+                            <p className="text-xs text-[#6e6e73] dark:text-[#86868b] truncate capitalize">{item.category}</p>
                           )}
                         </div>
                         {isPendingNew && (
@@ -192,10 +192,10 @@ export default function GlobalSearch({ isOpen, onClose }) {
 
         {/* Footer hints */}
         {query.trim() && flat.length > 0 && (
-          <div className="flex items-center gap-4 px-4 py-2.5 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-400 dark:text-slate-500">
-            <span><kbd className="border border-slate-200 dark:border-slate-600 rounded px-1 py-0.5">↑↓</kbd> Navegar</span>
-            <span><kbd className="border border-slate-200 dark:border-slate-600 rounded px-1 py-0.5">Enter</kbd> Abrir</span>
-            <span><kbd className="border border-slate-200 dark:border-slate-600 rounded px-1 py-0.5">Esc</kbd> Cerrar</span>
+          <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#d2d2d7] dark:border-[#38383a] text-xs text-[#8e8e93] dark:text-[#636366]">
+            <span><kbd className="border border-[#d2d2d7] dark:border-[#48484a] rounded px-1 py-0.5">↑↓</kbd> Navegar</span>
+            <span><kbd className="border border-[#d2d2d7] dark:border-[#48484a] rounded px-1 py-0.5">Enter</kbd> Abrir</span>
+            <span><kbd className="border border-[#d2d2d7] dark:border-[#48484a] rounded px-1 py-0.5">Esc</kbd> Cerrar</span>
           </div>
         )}
       </div>

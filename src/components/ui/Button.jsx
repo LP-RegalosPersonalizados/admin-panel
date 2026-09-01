@@ -1,11 +1,11 @@
 import { Loader2 } from 'lucide-react';
 
 const variants = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600',
-  secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600',
+  primary: 'bg-[#0071e3] text-white hover:bg-[#0077ed] dark:bg-[#0a84ff] dark:hover:bg-[#409cff]',
+  secondary: 'bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#e8e8ed] dark:bg-[#38383a] dark:text-[#f5f5f7] dark:hover:bg-[#48484a]',
   danger: 'bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700',
-  ghost: 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700',
-  outline: 'border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700',
+  ghost: 'text-[#6e6e73] hover:bg-[#f5f5f7] dark:text-[#86868b] dark:hover:bg-[#38383a]',
+  outline: 'border border-[#d2d2d7] text-[#1d1d1f] hover:bg-[#f5f5f7] dark:border-[#48484a] dark:text-[#f5f5f7] dark:hover:bg-[#38383a]',
 };
 
 const sizes = {
@@ -27,7 +27,7 @@ export default function Button({
   className = '',
   ...rest
 }) {
-  const base = 'inline-flex items-center justify-center font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none';
+  const base = 'inline-flex items-center justify-center font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 dark:focus:ring-offset-[#000000] disabled:opacity-50 disabled:pointer-events-none';
 
   return (
     <button

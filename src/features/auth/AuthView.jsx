@@ -4,15 +4,15 @@ import Button from '../../components/ui/Button';
 
 export default function AuthView({ email, password, error, loading, onEmailChange, onPasswordChange, onSubmit }) {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-slate-50 dark:bg-slate-900 px-4">
+    <div className="flex justify-center items-center min-h-screen bg-[#ffffff] dark:bg-[#000000] px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-8">
+        <div className="bg-white dark:bg-[#161617] rounded-xl shadow-sm p-8">
           <div className="flex flex-col items-center mb-6">
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl mb-4">
-              <Package size={28} className="text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-[rgba(0,113,227,0.08)] dark:bg-[rgba(10,132,255,0.18)] rounded-xl mb-4">
+              <Package size={28} className="text-[#0071e3] dark:text-[#2997ff]" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Admin</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Recuerdos Compartidos</p>
+            <h1 className="text-xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Admin</h1>
+            <p className="text-sm text-[#6e6e73] dark:text-[#86868b] mt-0.5">Recuerdos Compartidos</p>
           </div>
 
           {error && (
