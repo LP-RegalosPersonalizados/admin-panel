@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, Briefcase } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
+import BentoGrid from '../../components/ui/BentoGrid';
+import BentoCell from '../../components/ui/BentoCell';
 import StatCard from './StatCard';
 import CategoryBarChart from './CategoryBarChart';
 import MiniStatsGrid from './MiniStatsGrid';
@@ -50,37 +52,37 @@ export default function DashboardView({
       </div>
 
       {/* Bento Grid */}
-      <div className="bento-dashboard">
+      <BentoGrid variant="dashboard">
         {/* Cell A: StatCard Productos */}
-        <div className="bento-cell bento-cell-interactive !p-4">
+        <BentoCell interactive compact>
           <StatCard to="/productos" iconName="Package" title="Productos" value={productosCount} pending={productosPending} color="blue" />
-        </div>
+        </BentoCell>
 
         {/* Cell B: StatCard Trabajos */}
-        <div className="bento-cell bento-cell-interactive !p-4">
+        <BentoCell interactive compact>
           <StatCard to="/trabajos" iconName="Briefcase" title="Trabajos" value={trabajosCount} pending={trabajosPending} color="amber" />
-        </div>
+        </BentoCell>
 
         {/* Cell C: FeaturedProducts HERO (2col × 2row on desktop) */}
-        <div className="bento-cell lg:col-span-2 lg:row-span-2">
+        <BentoCell span={{ col: 2, row: 2 }}>
           <FeaturedProducts items={featuredProducts} total={featuredTotal} />
-        </div>
+        </BentoCell>
 
         {/* Cell D: StatCard Categorias */}
-        <div className="bento-cell bento-cell-interactive !p-4">
+        <BentoCell interactive compact>
           <StatCard to="/productos" iconName="Tags" title="Categorías" value={categoryCount} color="emerald" />
-        </div>
+        </BentoCell>
 
         {/* Cell E: QuickActions */}
-        <div className="bento-cell flex items-center justify-center">
+        <BentoCell className="flex items-center justify-center">
           <QuickActions
             onNewProducto={() => navigate('/productos?nuevo=1')}
             onNewTrabajo={() => navigate('/trabajos?nuevo=1')}
           />
-        </div>
+        </BentoCell>
 
         {/* Cell F: CategoryBarCharts (2col wide) */}
-        <div className="bento-cell lg:col-span-2">
+        <BentoCell span={{ col: 2 }}>
           <p className="text-sm font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-4">Distribución por Categoría</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
@@ -98,33 +100,33 @@ export default function DashboardView({
               <CategoryBarChart data={trabajosByCat} color="amber" emptyLabel="Sin trabajos por categoría" />
             </div>
           </div>
-        </div>
+        </BentoCell>
 
         {/* Cell G: MiniStatsGrid (2col wide) */}
-        <div className="bento-cell lg:col-span-2">
+        <BentoCell span={{ col: 2 }}>
           <MiniStatsGrid priceStats={priceStats} audienceStats={audienceStats} />
-        </div>
+        </BentoCell>
 
         {/* Cell H: PriceHistogram */}
-        <div className="bento-cell">
+        <BentoCell>
           <PriceHistogram data={priceHistogram} />
-        </div>
+        </BentoCell>
 
         {/* Cell I: TopExpensive */}
-        <div className="bento-cell">
+        <BentoCell>
           <TopExpensive items={topExpensive} />
-        </div>
+        </BentoCell>
 
         {/* Cell J: RecentAdded */}
-        <div className="bento-cell">
+        <BentoCell>
           <RecentAdded productos={recentProductos} trabajos={recentTrabajos} />
-        </div>
+        </BentoCell>
 
         {/* Cell K: ActivityFeed (full width) */}
-        <div className="bento-cell lg:col-span-4">
+        <BentoCell span={{ col: 4 }}>
           <ActivityFeed entries={activityLog} />
-        </div>
-      </div>
+        </BentoCell>
+      </BentoGrid>
     </Layout>
   );
 }

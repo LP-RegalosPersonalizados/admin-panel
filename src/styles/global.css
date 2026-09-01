@@ -122,3 +122,6 @@
     padding: 16px;
   }
 }
+
+.bento-cell-compact { padding: 16px; }
+@media (max-width: 639px) { .bento-cell-compact { padding: 12px; } }

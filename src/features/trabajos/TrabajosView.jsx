@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Plus, Trash2, X, Search, Briefcase, Hash, Tags } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
+import BentoGrid from '../../components/ui/BentoGrid';
+import BentoCell from '../../components/ui/BentoCell';
 import DataTable from '../../components/ui/DataTable';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -50,9 +52,9 @@ export default function TrabajosView({
 
   return (
     <Layout>
-      <div className="bento-page">
+      <BentoGrid variant="page" maxWidth="1200px">
         {/* Cell 1: Header */}
-        <div className="bento-cell flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <BentoCell className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h1 className="text-xl md:text-2xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7]">Trabajos</h1>
             {pendingCount > 0 && (
@@ -71,12 +73,12 @@ export default function TrabajosView({
               Nuevo
             </Button>
           </div>
-        </div>
+        </BentoCell>
 
         {/* Cell 2: Summary stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {summaryStats.map((stat) => (
-            <div key={stat.label} className="bento-cell flex items-center gap-3 !p-4">
+            <BentoCell key={stat.label} compact className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-[#f5f5f7] dark:bg-[#1c1c1e]">
                 <stat.icon size={18} className={stat.color} />
               </div>
@@ -84,12 +86,12 @@ export default function TrabajosView({
                 <p className="text-xs text-[#6e6e73] dark:text-[#86868b]">{stat.label}</p>
                 <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
               </div>
-            </div>
+            </BentoCell>
           ))}
         </div>
 
         {/* Cell 3: Search */}
-        <div className="bento-cell">
+        <BentoCell>
           <div className="relative max-w-md">
             <Input
               icon={Search}
@@ -108,10 +110,10 @@ export default function TrabajosView({
               </button>
             )}
           </div>
-        </div>
+        </BentoCell>
 
         {/* Cell 4: DataTable */}
-        <div className="bento-cell">
+        <BentoCell>
           <DataTable
             columns={COLUMNS}
             data={effectiveData}
@@ -122,8 +124,8 @@ export default function TrabajosView({
             onSelectionChange={onSelectionChange}
             onDeleteSelected={onDeleteSelected}
           />
-        </div>
-      </div>
+        </BentoCell>
+      </BentoGrid>
 
       {showForm && (
         <TrabajoForm
